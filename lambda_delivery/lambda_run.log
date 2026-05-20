@@ -1,0 +1,68 @@
+
+============================================================
+  Training: testbed=electronics, method=v4, seed=42
+  Budget: 1,600,000 steps  (checkpoint every 100,000)
+  Output: results\electronics_v4_lambda\seed_42
+============================================================
+
+  Training complete in 43.0 min
+  Wrote lambda_history.csv (3343 episodes)
+
+  Validating 16 checkpoints on 20 seeds...
+    1,000,000 steps: CPU= 267.72  joint sat=0/20
+     100,000 steps: CPU= 275.29  joint sat=0/20
+    1,100,000 steps: CPU= 228.81  joint sat=0/20
+    1,200,000 steps: CPU= 276.83  joint sat=0/20
+    1,300,000 steps: CPU= 276.78  joint sat=0/20
+    1,400,000 steps: CPU= 180.39  joint sat=0/20
+    1,500,000 steps: CPU= 207.76  joint sat=0/20
+    1,600,000 steps: CPU= 221.92  joint sat=0/20
+     200,000 steps: CPU= 109.66  joint sat=0/20
+     300,000 steps: CPU= 107.36  joint sat=0/20
+     400,000 steps: CPU= 267.81  joint sat=0/20
+     500,000 steps: CPU= 162.16  joint sat=0/20
+     600,000 steps: CPU= 258.00  joint sat=0/20
+     700,000 steps: CPU= 127.22  joint sat=0/20
+     800,000 steps: CPU= 259.65  joint sat=0/20
+     900,000 steps: CPU= 259.12  joint sat=0/20
+
+  Selected checkpoint: 300,000 steps  (status: fallback)
+  Wrote 50 test records to results\electronics_v4_lambda\results_seed_42.csv
+
+============================================================
+  Training: testbed=electronics, method=v4, seed=2024
+  Budget: 1,600,000 steps  (checkpoint every 100,000)
+  Output: results\electronics_v4_lambda\seed_2024
+============================================================
+
+  Training complete in 24.6 min
+  Wrote lambda_history.csv (3343 episodes)
+
+  Validating 16 checkpoints on 20 seeds...
+    1,000,000 steps: CPU= 235.25  joint sat=0/20
+     100,000 steps: CPU= 234.93  joint sat=0/20
+    1,100,000 steps: CPU= 258.63  joint sat=0/20
+    1,200,000 steps: CPU= 259.33  joint sat=0/20
+    1,300,000 steps: CPU= 248.38  joint sat=0/20
+    1,400,000 steps: CPU= 228.74  joint sat=0/20
+    1,500,000 steps: CPU= 256.10  joint sat=0/20
+    1,600,000 steps: CPU= 271.60  joint sat=0/20
+     200,000 steps: CPU= 117.89  joint sat=0/20
+     300,000 steps: CPU=  99.94  joint sat=6/20
+     400,000 steps: CPU= 129.27  joint sat=0/20
+     500,000 steps: CPU= 115.07  joint sat=0/20
+     600,000 steps: CPU= 107.53  joint sat=2/20
+     700,000 steps: CPU= 108.38  joint sat=2/20
+     800,000 steps: CPU= 125.58  joint sat=0/20
+     900,000 steps: CPU= 246.11  joint sat=0/20
+
+  Selected checkpoint: 300,000 steps  (status: fallback)
+  Wrote 50 test records to results\electronics_v4_lambda\results_seed_2024.csv
+
+Summary written to results\electronics_v4_lambda\summary.csv
+
+============================================================
+  v4, electronics: 2 seeds completed
+============================================================
+  CPU:         104.35  95% CI: ±17.57
+  Throughput:   41.64  95% CI: ±9.53

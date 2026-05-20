@@ -1,0 +1,76 @@
+{
+  "_metadata": {
+    "name": "Demo \u2014 Bottleneck 3-stage",
+    "kind": "demo",
+    "purpose": "3-stage system with a deliberate bottleneck in stage 2. Tests how routing policies behave when downstream stages are over-capacitated. The optimal policy must concentrate routing on the fastest stage-2 server even when it's expensive.",
+    "expected_action_count": 12
+  },
+  "stages": [
+    {
+      "name": "Stage 1 (over-capacitated)",
+      "servers": [
+        {
+          "name": "S1.fast",
+          "service_time": {"distribution": "exponential", "mean": 5.0},
+          "processing_cost": 1.2,
+          "idle_cost": 0.3
+        },
+        {
+          "name": "S1.slow",
+          "service_time": {"distribution": "exponential", "mean": 7.0},
+          "processing_cost": 0.9,
+          "idle_cost": 0.3
+        }
+      ]
+    },
+    {
+      "name": "Stage 2 (bottleneck)",
+      "servers": [
+        {
+          "name": "S2.premium",
+          "service_time": {"distribution": "normal", "mean": 18.0, "std": 4.0, "min": 2.0},
+          "processing_cost": 2.0,
+          "idle_cost": 0.5
+        },
+        {
+          "name": "S2.standard",
+          "service_time": {"distribution": "normal", "mean": 28.0, "std": 7.0, "min": 3.0},
+          "processing_cost": 1.0,
+          "idle_cost": 0.5
+        },
+        {
+          "name": "S2.legacy",
+          "service_time": {"distribution": "normal", "mean": 40.0, "std": 10.0, "min": 4.0},
+          "processing_cost": 0.6,
+          "idle_cost": 0.5
+        }
+      ]
+    },
+    {
+      "name": "Stage 3 (over-capacitated)",
+      "servers": [
+        {
+          "name": "S3.fast",
+          "service_time": {"distribution": "exponential", "mean": 6.0},
+          "processing_cost": 1.2,
+          "idle_cost": 0.3
+        },
+        {
+          "name": "S3.slow",
+          "service_time": {"distribution": "exponential", "mean": 9.0},
+          "processing_cost": 0.8,
+          "idle_cost": 0.3
+        }
+      ]
+    }
+  ],
+  "arrival": {
+    "distribution": "exponential",
+    "mean": 12.0
+  },
+  "waiting_cost": 0.15,
+  "max_time": 480.0,
+  "dt": 1.0,
+  "max_queue": 50.0,
+  "norm_constants": [4500.0, 35.0, 6000.0]
+}

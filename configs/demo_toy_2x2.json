@@ -1,0 +1,53 @@
+{
+  "_metadata": {
+    "name": "Demo \u2014 Toy 2\u00d72 (smoke test)",
+    "kind": "demo",
+    "purpose": "Minimal 2-stage \u00d7 2-server system for quick UI smoke tests and pedagogical illustration. NOT a calibrated benchmark.",
+    "expected_action_count": 4
+  },
+  "stages": [
+    {
+      "name": "Stage 1",
+      "servers": [
+        {
+          "name": "S1.fast",
+          "service_time": {"distribution": "exponential", "mean": 4.0},
+          "processing_cost": 1.5,
+          "idle_cost": 0.3
+        },
+        {
+          "name": "S1.slow",
+          "service_time": {"distribution": "exponential", "mean": 8.0},
+          "processing_cost": 1.0,
+          "idle_cost": 0.3
+        }
+      ]
+    },
+    {
+      "name": "Stage 2",
+      "servers": [
+        {
+          "name": "S2.fast",
+          "service_time": {"distribution": "exponential", "mean": 5.0},
+          "processing_cost": 1.5,
+          "idle_cost": 0.3
+        },
+        {
+          "name": "S2.slow",
+          "service_time": {"distribution": "exponential", "mean": 10.0},
+          "processing_cost": 1.0,
+          "idle_cost": 0.3
+        }
+      ]
+    }
+  ],
+  "arrival": {
+    "distribution": "exponential",
+    "mean": 6.0
+  },
+  "waiting_cost": 0.1,
+  "max_time": 240.0,
+  "dt": 1.0,
+  "max_queue": 30.0,
+  "norm_constants": [500.0, 30.0, 200.0]
+}

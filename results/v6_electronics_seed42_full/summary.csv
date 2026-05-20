@@ -1,0 +1,2 @@
+method,seed,selected_checkpoint,selection_status,test_episodes,mean_throughput,mean_cpu,std_cpu,util_sat_rate,tp_sat_rate
+v6,42,1500000,fallback,50,43.32,106.41494498895293,10.665749469896966,1.0,0.0
