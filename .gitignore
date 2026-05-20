@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.Python
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Local artifacts (these were excluded from the public release)
+results_smoke/
+results_spotcheck/
+logs/
+.claude/
+inventory.txt
+
+# Manuscript and writing artifacts
+*.docx
+*.pdf
+*.tex
+*.aux
+*.bbl
+*.blg
+*.log.tex
+
+# OS junk
+.DS_Store
+ehthumbs.db
+Thumbs.db

@@ -1,0 +1,3 @@
+testbed,n_seeds,mean_test_cpu,ci95_cpu,mean_test_tp,ci95_tp,seeds_satisfied,mean_best_joint_sat,max_best_joint_sat,mean_util_sat_pct,mean_tp_sat_pct,mean_lam_T_saturation_pct
+bakery,5,146.07961085697966,19.801595137372015,18.872,2.372114334593507,3,14.2,20,90.4,70.8,0.0
+electronics,5,106.68553392406463,16.12921186561353,41.896,8.474240051748353,1,4.2,20,47.2,17.2,45.366437331737956
