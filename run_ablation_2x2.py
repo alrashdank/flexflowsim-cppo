@@ -83,11 +83,11 @@ T_CRIT = {2: 12.706, 3: 4.303, 4: 3.182, 5: 2.776, 6: 2.571}  # 95% two-sided
 # Evaluation (identical semantics to run_experiment.py)
 # ============================================================
 
-def evaluate_episode(model, env):
+def evaluate_episode(model, env, deterministic=True):
     obs, _ = env.reset()
     done, last_info = False, None
     while not done:
-        action, _ = model.predict(obs, deterministic=True)
+        action, _ = model.predict(obs, deterministic=deterministic)
         obs, _, term, trunc, last_info = env.step(action)
         done = term or trunc
     tc = float(last_info.get("total_cost", 0.0))
@@ -98,11 +98,11 @@ def evaluate_episode(model, env):
             "utilisations": [float(u) for u in last_info.get("utilisation", [])]}
 
 
-def evaluate_on_seeds(model, cfg, weights, seeds, tb):
+def evaluate_on_seeds(model, cfg, weights, seeds, tb, deterministic=True):
     records = []
     for s in seeds:
         env = FlexFlowSimEnv(config=cfg["config"], weights=weights, seed=int(s))
-        r = evaluate_episode(model, env)
+        r = evaluate_episode(model, env, deterministic=deterministic)
         util = np.array(r["utilisations"])
         r["util_satisfied"] = int(all(util[i] >= cfg["u_min"]
                                       for i in cfg["constrained_servers"]))
@@ -146,7 +146,11 @@ def make_wrapped_env(tb, cfg, cell, seed, symmetric):
     )
 
 
-def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric):
+def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
+                  stage="full"):
+    """stage: 'full' = train+evaluate; 'train' = train only (checkpoints +
+    lambda history, no evaluation); 'finish' = evaluate existing checkpoints.
+    Useful when each call must fit a wall-clock cap; all stages idempotent."""
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback
 
@@ -158,27 +162,43 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric):
 
     ckpt_dir = seed_dir / "checkpoints"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
+    final_ckpt = ckpt_dir / f"ckpt_{budget}_steps.zip"
+    mins = None
 
-    env = make_wrapped_env(tb, cfg, cell, seed, symmetric)
-    model = PPO("MlpPolicy", env, seed=seed, verbose=0, **PPO_HYPERPARAMS)
-    cb = CheckpointCallback(save_freq=ckpt_freq, save_path=str(ckpt_dir),
-                            name_prefix="ckpt")
+    if stage in ("full", "train") and not final_ckpt.exists():
+        env = make_wrapped_env(tb, cfg, cell, seed, symmetric)
+        model = PPO("MlpPolicy", env, seed=seed, verbose=0, **PPO_HYPERPARAMS)
+        cb = CheckpointCallback(save_freq=ckpt_freq, save_path=str(ckpt_dir),
+                                name_prefix="ckpt")
+        print(f"\n=== {tb} | {cell} | seed {seed} | {budget:,} steps ===")
+        t0 = time.time()
+        model.learn(total_timesteps=budget, callback=cb, progress_bar=False)
+        mins = (time.time() - t0) / 60.0
+        model.save(str(ckpt_dir / f"ckpt_{budget}_steps"))
+        print(f"    trained in {mins:.1f} min "
+              f"({budget / max(time.time() - t0, 1e-9):,.0f} steps/s)")
+        hist = env.lambda_history
+        if hist:
+            with open(seed_dir / "lambda_history.csv", "w", newline="") as f:
+                w = csv.DictWriter(f, fieldnames=list(hist[0].keys()))
+                w.writeheader()
+                w.writerows(hist)
 
-    print(f"\n=== {tb} | {cell} | seed {seed} | {budget:,} steps ===")
-    t0 = time.time()
-    model.learn(total_timesteps=budget, callback=cb, progress_bar=False)
-    mins = (time.time() - t0) / 60.0
-    model.save(str(ckpt_dir / f"ckpt_{budget}_steps"))
-    print(f"    trained in {mins:.1f} min "
-          f"({budget / max(time.time() - t0, 1e-9):,.0f} steps/s)")
+    if stage == "train":
+        print(f"    [train stage complete: {cell} seed {seed}]")
+        return None
+    if not final_ckpt.exists():
+        print(f"[finish] {cell} seed {seed}: no final checkpoint — "
+              f"run --stage train first")
+        return None
 
-    # lambda history
-    hist = env.lambda_history
-    if hist:
-        with open(seed_dir / "lambda_history.csv", "w", newline="") as f:
-            w = csv.DictWriter(f, fieldnames=list(hist[0].keys()))
-            w.writeheader()
-            w.writerows(hist)
+    # lambda history from disk (works for both stages)
+    hist = []
+    hp = seed_dir / "lambda_history.csv"
+    if hp.exists():
+        with open(hp) as f:
+            hist = [{k: float(v) for k, v in row.items()}
+                    for row in csv.DictReader(f)]
 
     # validate every checkpoint
     ckpts = sorted({int(p.stem.split("_")[1]) for p in ckpt_dir.glob("ckpt_*_steps.zip")})
@@ -194,9 +214,13 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric):
 
     sel_steps, status = select_best_checkpoint(records)
 
-    # test the selected checkpoint
+    # test the selected checkpoint — deterministic (published protocol) AND
+    # stochastic (the policy class Lagrangian training actually optimises;
+    # CMDP optima are generically randomised, Altman 1999)
     m = PPO.load(str(ckpt_dir / f"ckpt_{sel_steps}_steps"), device="cpu")
     test = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb)
+    test_s = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb,
+                               deterministic=False)
     with open(seed_dir / "test_results.csv", "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(test[0].keys()))
         w.writeheader()
@@ -211,10 +235,14 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric):
         "test_mean_tp": float(np.mean([r["throughput"] for r in test])),
         "test_util_sat": float(np.mean([r["util_satisfied"] for r in test])),
         "test_tp_sat": float(np.mean([r["tp_satisfied"] for r in test])),
+        "stoch_test_mean_cpu": float(np.mean([r["cost_per_unit"] for r in test_s])),
+        "stoch_test_mean_tp": float(np.mean([r["throughput"] for r in test_s])),
+        "stoch_test_util_sat": float(np.mean([r["util_satisfied"] for r in test_s])),
+        "stoch_test_tp_sat": float(np.mean([r["tp_satisfied"] for r in test_s])),
         "lam_tp_final": lam_tp_final,
         "lam_tp_saturated": bool(lam_tp_final is not None
                                  and lam_tp_final >= 0.99 * 20000.0),
-        "train_minutes": round(mins, 1),
+        "train_minutes": round(mins, 1) if mins is not None else None,
     }
     summary_path.write_text(json.dumps(summary, indent=2))
     print(f"    selected {sel_steps:,} ({status})  "
@@ -259,6 +287,8 @@ def aggregate(tb, cfg, outdir, cells):
         cpus = [s["test_mean_cpu"] for s in summaries]
         n = len(cpus)
         ci = T_CRIT.get(n, 1.96) * np.std(cpus, ddof=1) / np.sqrt(n) if n > 1 else 0.0
+        scpus = [s["stoch_test_mean_cpu"] for s in summaries
+                 if "stoch_test_mean_cpu" in s]
         rows.append({
             "cell": cell, "n_seeds": n,
             "cpu_mean": round(float(np.mean(cpus)), 2),
@@ -266,6 +296,10 @@ def aggregate(tb, cfg, outdir, cells):
             "tp_mean": round(float(np.mean([s["test_mean_tp"] for s in summaries])), 2),
             "joint_sat_%": round(100 * float(np.mean(
                 [min(s["test_util_sat"], s["test_tp_sat"]) for s in summaries])), 1),
+            "stoch_cpu_mean": round(float(np.mean(scpus)), 2) if scpus else None,
+            "stoch_joint_sat_%": round(100 * float(np.mean(
+                [min(s["stoch_test_util_sat"], s["stoch_test_tp_sat"])
+                 for s in summaries if "stoch_test_util_sat" in s])), 1) if scpus else None,
             "seeds_validation_satisfied": sum(
                 s["selection_status"] == "satisfied" for s in summaries),
             "lam_T_saturated": sum(s["lam_tp_saturated"] for s in summaries),
@@ -273,15 +307,17 @@ def aggregate(tb, cfg, outdir, cells):
     sq_cpu, sq_tp = shortestqueue_reference(tb, cfg)
     print(f"\n{'='*78}\n  VERDICT — {tb}  "
           f"(ShortestQueue reference: CPU=${sq_cpu:.2f}, TP={sq_tp:.1f})\n{'='*78}")
-    hdr = ("cell", "n", "CPU mean±CI", "TP", "joint sat %",
-           "seeds val-sat", "lam_T sat")
-    print(f"  {hdr[0]:<16}{hdr[1]:>3} {hdr[2]:>18} {hdr[3]:>7} "
-          f"{hdr[4]:>12} {hdr[5]:>14} {hdr[6]:>10}")
+    print(f"  {'cell':<16}{'n':>3} {'argmax CPU±CI':>16} {'TP':>7} "
+          f"{'sat%':>6} | {'stoch CPU':>10} {'sat%':>6} | {'val-sat':>8} {'lamT sat':>9}")
     for r in rows:
+        sc = f"{r['stoch_cpu_mean']:>10.2f}" if r.get("stoch_cpu_mean") is not None else f"{'—':>10}"
+        ss = (f"{r['stoch_joint_sat_%']:>5.1f}%"
+              if r.get("stoch_joint_sat_%") is not None else f"{'—':>6}")
         print(f"  {r['cell']:<16}{r['n_seeds']:>3} "
-              f"{r['cpu_mean']:>10.2f}±{r['cpu_ci95']:<6.2f} {r['tp_mean']:>7.2f} "
-              f"{r['joint_sat_%']:>11.1f}% {r['seeds_validation_satisfied']:>10}/{r['n_seeds']} "
-              f"{r['lam_T_saturated']:>7}/{r['n_seeds']}")
+              f"{r['cpu_mean']:>9.2f}±{r['cpu_ci95']:<6.2f} {r['tp_mean']:>7.2f} "
+              f"{r['joint_sat_%']:>5.1f}% | {sc} {ss} | "
+              f"{r['seeds_validation_satisfied']:>5}/{r['n_seeds']} "
+              f"{r['lam_T_saturated']:>6}/{r['n_seeds']}")
     out = Path(outdir) / "ablation_summary.csv"
     if rows:
         with open(out, "w", newline="") as f:
@@ -307,6 +343,9 @@ def main():
     ap.add_argument("--checkpoint-interval", type=int, default=100_000)
     ap.add_argument("--symmetric", action="store_true",
                     help="signed (V6-lite) dual update in episode cells")
+    ap.add_argument("--stage", choices=["full", "train", "finish"],
+                    default="full",
+                    help="split train and evaluation into separate calls")
     ap.add_argument("--outdir", default=None)
     ap.add_argument("--aggregate-only", action="store_true")
     args = ap.parse_args()
@@ -324,7 +363,8 @@ def main():
         for cell in cells:
             for seed in seeds:
                 run_cell_seed(args.testbed, cfg, cell, seed, budget,
-                              args.checkpoint_interval, outdir, args.symmetric)
+                              args.checkpoint_interval, outdir, args.symmetric,
+                              stage=args.stage)
     aggregate(args.testbed, cfg, outdir, cells)
 
 
