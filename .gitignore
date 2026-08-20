@@ -44,3 +44,5 @@ inventory.txt
 .DS_Store
 ehthumbs.db
 Thumbs.db
+__pycache__/
+results_ablation/
