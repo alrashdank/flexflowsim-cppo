@@ -134,23 +134,44 @@ def select_best_checkpoint(checkpoint_records):
 # Training
 # ============================================================
 
-def make_wrapped_env(tb, cfg, cell, seed, symmetric):
+def make_wrapped_env(tb, cfg, cell, seed, symmetric, lam_state=None):
+    """lam_state: dict from a previous segment's lam_state.json, restoring the
+    dual variables and episode counter so segmented training is faithful
+    (Protocol Amendment R1 §A3.1)."""
     base = FlexFlowSimEnv(config=cfg["config"],
                           weights=CELLS[cell]["weights"], seed=seed)
-    return SlackLagrangianFlowEnv(
+    env = SlackLagrangianFlowEnv(
         base, cfg["constrained_servers"],
         util_floor=cfg["u_min"],
         tp_rate_floor=cfg["tp_target"] / 480.0,
         slack_mode=CELLS[cell]["slack"],
         symmetric=symmetric,
     )
+    if lam_state:
+        env.lam_util = float(lam_state["lam_util"])
+        env.lam_tp = float(lam_state["lam_tp"])
+        env._episode = int(lam_state.get("episode", 0))
+    return env
+
+
+def _append_lambda_history(seed_dir, hist):
+    if not hist:
+        return
+    p = seed_dir / "lambda_history.csv"
+    exists = p.exists()
+    with open(p, "a", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=list(hist[0].keys()))
+        if not exists:
+            w.writeheader()
+        w.writerows(hist)
 
 
 def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
-                  stage="full"):
-    """stage: 'full' = train+evaluate; 'train' = train only (checkpoints +
-    lambda history, no evaluation); 'finish' = evaluate existing checkpoints.
-    Useful when each call must fit a wall-clock cap; all stages idempotent."""
+                  stage="full", segment_steps=None, selection="stochastic"):
+    """stage: 'full' = train+evaluate; 'train' = train one segment only;
+    'finish' = evaluate existing checkpoints (resumable — validation results
+    are cached per checkpoint). All stages idempotent; repeated 'train' calls
+    advance the run one segment at a time (Protocol Amendment R1 §A3.1)."""
     from stable_baselines3 import PPO
     from stable_baselines3.common.callbacks import CheckpointCallback
 
@@ -163,36 +184,51 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
     ckpt_dir = seed_dir / "checkpoints"
     ckpt_dir.mkdir(parents=True, exist_ok=True)
     final_ckpt = ckpt_dir / f"ckpt_{budget}_steps.zip"
+    lam_path = seed_dir / "lam_state.json"
+    seg = int(segment_steps or budget)
     mins = None
 
-    if stage in ("full", "train") and not final_ckpt.exists():
-        env = make_wrapped_env(tb, cfg, cell, seed, symmetric)
-        model = PPO("MlpPolicy", env, seed=seed, verbose=0, **PPO_HYPERPARAMS)
+    while stage in ("full", "train") and not final_ckpt.exists():
+        done_steps = int(json.loads(lam_path.read_text())["steps"]) if lam_path.exists() else 0
+        target = min(done_steps + seg, budget)
+        lam_state = json.loads(lam_path.read_text()) if lam_path.exists() else None
+        env = make_wrapped_env(tb, cfg, cell, seed, symmetric, lam_state)
+
+        if done_steps == 0:
+            model = PPO("MlpPolicy", env, seed=seed, verbose=0, **PPO_HYPERPARAMS)
+        else:
+            model = PPO.load(str(ckpt_dir / f"ckpt_{done_steps}_steps"),
+                             env=env, device="cpu")
         cb = CheckpointCallback(save_freq=ckpt_freq, save_path=str(ckpt_dir),
                                 name_prefix="ckpt")
-        print(f"\n=== {tb} | {cell} | seed {seed} | {budget:,} steps ===")
+        print(f"\n=== {tb} | {cell} | seed {seed} | "
+              f"{done_steps:,} → {target:,} of {budget:,} steps ===")
         t0 = time.time()
-        model.learn(total_timesteps=budget, callback=cb, progress_bar=False)
-        mins = (time.time() - t0) / 60.0
-        model.save(str(ckpt_dir / f"ckpt_{budget}_steps"))
-        print(f"    trained in {mins:.1f} min "
-              f"({budget / max(time.time() - t0, 1e-9):,.0f} steps/s)")
-        hist = env.lambda_history
-        if hist:
-            with open(seed_dir / "lambda_history.csv", "w", newline="") as f:
-                w = csv.DictWriter(f, fieldnames=list(hist[0].keys()))
-                w.writeheader()
-                w.writerows(hist)
+        model.learn(total_timesteps=target - done_steps, callback=cb,
+                    reset_num_timesteps=(done_steps == 0), progress_bar=False)
+        dt = time.time() - t0
+        mins = dt / 60.0
+        model.save(str(ckpt_dir / f"ckpt_{target}_steps"))
+        _append_lambda_history(seed_dir, env.lambda_history)
+        lam_path.write_text(json.dumps({
+            "steps": target, "lam_util": env.lam_util, "lam_tp": env.lam_tp,
+            "episode": env._episode}, indent=2))
+        print(f"    segment done in {mins:.1f} min "
+              f"({(target - done_steps) / max(dt, 1e-9):,.0f} steps/s)  "
+              f"λ_U={env.lam_util:.1f} λ_T={env.lam_tp:.1f}")
+        if stage == "train":
+            break
 
     if stage == "train":
-        print(f"    [train stage complete: {cell} seed {seed}]")
+        state = "complete" if final_ckpt.exists() else "segment complete"
+        print(f"    [train {state}: {cell} seed {seed}]")
         return None
     if not final_ckpt.exists():
-        print(f"[finish] {cell} seed {seed}: no final checkpoint — "
-              f"run --stage train first")
+        print(f"[finish] {cell} seed {seed}: training incomplete — "
+              f"run --stage train again")
         return None
 
-    # lambda history from disk (works for both stages)
+    # lambda history from disk
     hist = []
     hp = seed_dir / "lambda_history.csv"
     if hp.exists():
@@ -200,23 +236,35 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
             hist = [{k: float(v) for k, v in row.items()}
                     for row in csv.DictReader(f)]
 
-    # validate every checkpoint
+    # Validate every checkpoint in BOTH modes (Amendment R1 §A2.1), caching to
+    # disk so a long validation sweep can be resumed across separate calls.
+    cache_path = seed_dir / "validation_cache.json"
+    cache = json.loads(cache_path.read_text()) if cache_path.exists() else {}
     ckpts = sorted({int(p.stem.split("_")[1]) for p in ckpt_dir.glob("ckpt_*_steps.zip")})
-    records = {}
     for st in ckpts:
+        if str(st) in cache:
+            continue
         m = PPO.load(str(ckpt_dir / f"ckpt_{st}_steps"), device="cpu")
-        records[st] = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"],
-                                        VALIDATION_SEEDS, tb)
-        u = sum(r["util_satisfied"] for r in records[st])
-        t = sum(r["tp_satisfied"] for r in records[st])
-        cpu = np.mean([r["cost_per_unit"] for r in records[st]])
-        print(f"    val {st:>9,}: CPU={cpu:8.2f}  Usat={u:2d}/20  Tsat={t:2d}/20")
+        det = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"],
+                                VALIDATION_SEEDS, tb, deterministic=True)
+        sto = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"],
+                                VALIDATION_SEEDS, tb, deterministic=False)
+        cache[str(st)] = {"argmax": det, "stochastic": sto}
+        cache_path.write_text(json.dumps(cache))
+        print(f"    val {st:>9,}: argmax CPU={np.mean([r['cost_per_unit'] for r in det]):7.2f} "
+              f"U={sum(r['util_satisfied'] for r in det):2d} T={sum(r['tp_satisfied'] for r in det):2d}"
+              f" | stoch CPU={np.mean([r['cost_per_unit'] for r in sto]):7.2f} "
+              f"U={sum(r['util_satisfied'] for r in sto):2d} T={sum(r['tp_satisfied'] for r in sto):2d}")
 
-    sel_steps, status = select_best_checkpoint(records)
+    rec_arg = {int(k): v["argmax"] for k, v in cache.items()}
+    rec_sto = {int(k): v["stochastic"] for k, v in cache.items()}
+    sel_arg, status_arg = select_best_checkpoint(rec_arg)
+    sel_sto, status_sto = select_best_checkpoint(rec_sto)
+    # Amendment R1 §A2.2: selection is stochastic; argmax selection recorded too.
+    sel_steps, status = ((sel_sto, status_sto) if selection == "stochastic"
+                         else (sel_arg, status_arg))
 
-    # test the selected checkpoint — deterministic (published protocol) AND
-    # stochastic (the policy class Lagrangian training actually optimises;
-    # CMDP optima are generically randomised, Altman 1999)
+    # test the selected checkpoint in both modes
     m = PPO.load(str(ckpt_dir / f"ckpt_{sel_steps}_steps"), device="cpu")
     test = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb)
     test_s = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb,
@@ -230,7 +278,10 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
     lam_tp_final = hist[-1]["lam_tp"] if hist else None
     summary = {
         "testbed": tb, "cell": cell, "seed": seed, "budget": budget,
+        "selection_mode": selection,
         "selected_steps": sel_steps, "selection_status": status,
+        "selected_steps_argmax": sel_arg, "selection_status_argmax": status_arg,
+        "selected_steps_stoch": sel_sto, "selection_status_stoch": status_sto,
         "test_mean_cpu": float(np.mean([r["cost_per_unit"] for r in test])),
         "test_mean_tp": float(np.mean([r["throughput"] for r in test])),
         "test_util_sat": float(np.mean([r["util_satisfied"] for r in test])),
@@ -302,6 +353,8 @@ def aggregate(tb, cfg, outdir, cells):
                  for s in summaries if "stoch_test_util_sat" in s])), 1) if scpus else None,
             "seeds_validation_satisfied": sum(
                 s["selection_status"] == "satisfied" for s in summaries),
+            "seeds_val_sat_argmax": sum(
+                s.get("selection_status_argmax") == "satisfied" for s in summaries),
             "lam_T_saturated": sum(s["lam_tp_saturated"] for s in summaries),
         })
     sq_cpu, sq_tp = shortestqueue_reference(tb, cfg)
@@ -346,6 +399,14 @@ def main():
     ap.add_argument("--stage", choices=["full", "train", "finish"],
                     default="full",
                     help="split train and evaluation into separate calls")
+    ap.add_argument("--segment-steps", type=int, default=None,
+                    help="train in segments of this many steps, carrying policy, "
+                         "optimiser and dual state across boundaries (Amendment R1 A3.1). "
+                         "With --stage train, one call advances one segment.")
+    ap.add_argument("--selection", choices=["stochastic", "argmax"],
+                    default="stochastic",
+                    help="which validation mode selects the checkpoint "
+                         "(Amendment R1 A2.2; default stochastic)")
     ap.add_argument("--outdir", default=None)
     ap.add_argument("--aggregate-only", action="store_true")
     args = ap.parse_args()
@@ -364,7 +425,8 @@ def main():
             for seed in seeds:
                 run_cell_seed(args.testbed, cfg, cell, seed, budget,
                               args.checkpoint_interval, outdir, args.symmetric,
-                              stage=args.stage)
+                              stage=args.stage, segment_steps=args.segment_steps,
+                              selection=args.selection)
     aggregate(args.testbed, cfg, outdir, cells)
 
 
