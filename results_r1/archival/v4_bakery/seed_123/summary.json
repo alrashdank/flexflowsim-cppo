@@ -1,0 +1,46 @@
+{
+  "run": "v4_bakery",
+  "testbed": "bakery",
+  "seed": 123,
+  "published_selected": 1500000,
+  "published_status": "satisfied",
+  "our_argmax_selected": 1500000,
+  "our_argmax_status": "satisfied",
+  "argmax_selection_reproduced": true,
+  "stoch_selected": 1000000,
+  "stoch_status": "satisfied",
+  "q1_published_ckpt": 1500000,
+  "q1": {
+    "argmax": {
+      "cpu": 146.0762289370689,
+      "tp": 19.28,
+      "util_sat": 0.98,
+      "tp_sat": 0.84,
+      "joint_sat": 0.82
+    },
+    "stochastic": {
+      "cpu": 141.67191713139317,
+      "tp": 19.86,
+      "util_sat": 0.96,
+      "tp_sat": 0.92,
+      "joint_sat": 0.88
+    }
+  },
+  "q2_stoch_ckpt": 1000000,
+  "q2": {
+    "argmax": {
+      "cpu": 230.05045901990164,
+      "tp": 12.06,
+      "util_sat": 1.0,
+      "tp_sat": 0.0,
+      "joint_sat": 0.0
+    },
+    "stochastic": {
+      "cpu": 139.24589023201946,
+      "tp": 20.06,
+      "util_sat": 0.96,
+      "tp_sat": 0.96,
+      "joint_sat": 0.92
+    }
+  }
+}

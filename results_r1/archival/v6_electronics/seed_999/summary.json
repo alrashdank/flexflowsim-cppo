@@ -1,0 +1,46 @@
+{
+  "run": "v6_electronics",
+  "testbed": "electronics",
+  "seed": 999,
+  "published_selected": 600000,
+  "published_status": "fallback",
+  "our_argmax_selected": 600000,
+  "our_argmax_status": "fallback",
+  "argmax_selection_reproduced": true,
+  "stoch_selected": 600000,
+  "stoch_status": "satisfied",
+  "q1_published_ckpt": 600000,
+  "q1": {
+    "argmax": {
+      "cpu": 113.3323049201359,
+      "tp": 39.26,
+      "util_sat": 0.28,
+      "tp_sat": 0.02,
+      "joint_sat": 0.02
+    },
+    "stochastic": {
+      "cpu": 81.22497383835193,
+      "tp": 54.92,
+      "util_sat": 0.9,
+      "tp_sat": 0.9,
+      "joint_sat": 0.88
+    }
+  },
+  "q2_stoch_ckpt": 600000,
+  "q2": {
+    "argmax": {
+      "cpu": 113.3323049201359,
+      "tp": 39.26,
+      "util_sat": 0.28,
+      "tp_sat": 0.02,
+      "joint_sat": 0.02
+    },
+    "stochastic": {
+      "cpu": 81.22497383835193,
+      "tp": 54.92,
+      "util_sat": 0.9,
+      "tp_sat": 0.9,
+      "joint_sat": 0.88
+    }
+  }
+}

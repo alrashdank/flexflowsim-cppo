@@ -1,0 +1,5 @@
+run,n,published_ckpt_argmax_cpu,published_ckpt_argmax_joint,published_ckpt_stoch_cpu,published_ckpt_stoch_joint,stoch_selected_cpu,stoch_selected_joint,stoch_val_satisfied,argmax_val_satisfied,argmax_sel_reproduced
+v4_bakery,5,149.30±27.73,69%,140.32±1.08,88%,138.37±1.52,80%,5/5,4/5,5/5
+v4_electronics,5,112.71±13.46,6%,81.57±1.93,77%,80.36±1.80,79%,5/5,0/5,5/5
+v6_bakery,4,141.57±22.71,74%,140.60±4.69,92%,140.42±5.55,83%,4/4,3/4,4/4
+v6_electronics,4,106.75±23.87,22%,83.93±10.76,62%,81.35±5.68,76%,3/4,1/4,4/4
