@@ -74,6 +74,14 @@ CELLS = {
     "shaped-episode": {"weights": (0.8, 0.1, 0.1), "slack": "episode"},
     "cost-cumrate":   {"weights": (1.0, 0.0, 0.0), "slack": "cumrate"},
     "cost-episode":   {"weights": (1.0, 0.0, 0.0), "slack": "episode"},
+    # Protocol Amendment R2: symmetric (signed) dual update with multipliers
+    # initialised, stepped and capped on the scale of the reward (see
+    # protocol_amendment_r2.md for the derivation of these values).
+    "cost-episode-sym": {"weights": (1.0, 0.0, 0.0), "slack": "episode",
+                         "symmetric": True,
+                         "lam": dict(lam_util_init=0.002, lam_tp_init=0.1,
+                                     lr_util=0.01, lr_tp=2.0,
+                                     lam_util_max=0.2, lam_tp_max=10.0)},
 }
 
 T_CRIT = {2: 12.706, 3: 4.303, 4: 3.182, 5: 2.776, 6: 2.571}  # 95% two-sided
@@ -99,8 +107,13 @@ def evaluate_episode(model, env, deterministic=True):
 
 
 def evaluate_on_seeds(model, cfg, weights, seeds, tb, deterministic=True):
+    """Amendment R2 §2: action sampling is seeded by the episode seed, so
+    stochastic evaluation is reproducible and uses common random numbers
+    across policies (protocol_deviations.md, R2-1)."""
+    import torch
     records = []
     for s in seeds:
+        torch.manual_seed(int(s))
         env = FlexFlowSimEnv(config=cfg["config"], weights=weights, seed=int(s))
         r = evaluate_episode(model, env, deterministic=deterministic)
         util = np.array(r["utilisations"])
@@ -145,7 +158,8 @@ def make_wrapped_env(tb, cfg, cell, seed, symmetric, lam_state=None):
         util_floor=cfg["u_min"],
         tp_rate_floor=cfg["tp_target"] / 480.0,
         slack_mode=CELLS[cell]["slack"],
-        symmetric=symmetric,
+        symmetric=bool(symmetric or CELLS[cell].get("symmetric", False)),
+        **CELLS[cell].get("lam", {}),
     )
     if lam_state:
         env.lam_util = float(lam_state["lam_util"])
@@ -269,11 +283,13 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
     test = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb)
     test_s = evaluate_on_seeds(m, cfg, CELLS[cell]["weights"], TEST_SEEDS, tb,
                                deterministic=False)
-    with open(seed_dir / "test_results.csv", "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=list(test[0].keys()))
-        w.writeheader()
-        w.writerows([{k: (v if not isinstance(v, list) else json.dumps(v))
-                      for k, v in r.items()} for r in test])
+    for name, recs in (("test_results.csv", test), ("test_results_stoch.csv", test_s)):
+        with open(seed_dir / name, "w", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=list(recs[0].keys()))
+            w.writeheader()
+            w.writerows([{k: (v if not isinstance(v, list) else json.dumps(v))
+                          for k, v in r.items()} for r in recs])
+    joint = lambda recs: float(np.mean([min(r["util_satisfied"], r["tp_satisfied"]) for r in recs]))
 
     lam_tp_final = hist[-1]["lam_tp"] if hist else None
     summary = {
@@ -290,9 +306,11 @@ def run_cell_seed(tb, cfg, cell, seed, budget, ckpt_freq, outdir, symmetric,
         "stoch_test_mean_tp": float(np.mean([r["throughput"] for r in test_s])),
         "stoch_test_util_sat": float(np.mean([r["util_satisfied"] for r in test_s])),
         "stoch_test_tp_sat": float(np.mean([r["tp_satisfied"] for r in test_s])),
+        "test_joint_sat": joint(test), "stoch_test_joint_sat": joint(test_s),
+        "lam_util_final": hist[-1]["lam_util"] if hist else None,
         "lam_tp_final": lam_tp_final,
         "lam_tp_saturated": bool(lam_tp_final is not None
-                                 and lam_tp_final >= 0.99 * 20000.0),
+                                 and lam_tp_final >= 0.99 * CELLS[cell].get("lam", {}).get("lam_tp_max", 20000.0)),
         "train_minutes": round(mins, 1) if mins is not None else None,
     }
     summary_path.write_text(json.dumps(summary, indent=2))
