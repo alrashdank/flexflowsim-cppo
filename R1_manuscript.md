@@ -90,8 +90,9 @@ retraining.
 
 The third is the corrected formulation and a re-run at the full pre-registered
 budget. The corrected per-step penalty is the signed pro-rata decomposition of
-the episode Lagrangian, which sums over the episode to the constraint the paper
-states and the protocol evaluates. Every seed of the corrected formulation
+the episode Lagrangian, which sums over the episode to the Lagrangian of the
+stated expectation constraint, on the same episode-level quantities the protocol
+evaluates. Every seed of the corrected formulation
 satisfies the validation criterion on both testbeds. On the harder testbed the
 correction improves both constraint satisfaction and cost-per-unit over the
 original implementation, and both differences survive a Holm adjustment over
@@ -377,8 +378,10 @@ Eq. (7),
 
 $$\sum_{t=0}^{H-1} p_t = \lambda_T\left(T_{\min} - \mathrm{TP}(\tau)\right) + \lambda_U\, H \sum_{i\in F_{\mathrm{fast}}}\left(U_{\min} - \bar u_i(\tau)\right)\qquad(7)$$
 
-the Lagrangian penalty of the constraint of Eq. (2) that is checked at validation
-and test, with ū_i(τ) the realised utilisation of server i over the episode.
+the Lagrangian penalty corresponding to the expectation constraint of Eq. (2),
+expressed in the same episode-level quantities, TP(τ) and ū_i(τ), that
+validation and test evaluate under the per-episode criterion of §3.3; here
+ū_i(τ) is the realised utilisation of server i over the episode.
 There is no fill-phase bias; an action's contribution depends only on the
 departures and busy time it causes. The multipliers are updated once per
 episode, at the episode boundary, from the hinged episode-level slack of
