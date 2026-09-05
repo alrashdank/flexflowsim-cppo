@@ -26,10 +26,12 @@ symmetric update and multipliers on the scale of the reward, produces a working
 Lagrangian and a state-dependent policy driven toward the throughput floor by
 the total-cost objective, as the stated problem asks; it is therefore worse per
 unit than random routing and infeasible on a quarter of episodes, because total
-cost is nearly flat in routing while cost-per-unit falls with throughput. Constrained PPO did not fail to satisfy its constraints
-here; it failed to learn a cost-efficient state-aware routing policy, and the
-reason lies in the gap between the objective posed and the metric reported. All
-code and results are open source.
+cost is nearly flat in routing while cost-per-unit falls with throughput. The
+apparent systematic constraint failure disappears once the training signal and
+the evaluation mode are corrected; the remaining failure is to learn a
+cost-efficient state-aware routing policy, and its reason lies in the gap
+between the objective posed and the metric reported. All code and results are
+open source.
 
 **Keywords:** constrained reinforcement learning, Lagrangian methods, flow-shop
 routing, production scheduling, negative results, reproducibility
@@ -111,8 +113,8 @@ initialised in units inherited from the per-step signal and a one-sided dual
 update can never release them once the constraints are slack. The agent was, in
 effect, trained to maximise throughput and fast-server utilisation, which it did
 by tilting a near-uniform router toward the fast servers. The method did not
-fail to satisfy its constraints; stateless load-balancing satisfies them too. It
-failed to learn a cost-efficient, state-aware routing policy competitive with a
+fail the protocol's constraint criterion; stateless load-balancing meets it
+too. It failed to learn a cost-efficient, state-aware routing policy competitive with a
 two-line dispatching rule, and under the objective it was actually given it had
 little reason to. A final cell, specified prospectively in a protocol amendment
 before its runs, gives it that reason, with a symmetric dual update and
@@ -1142,10 +1144,11 @@ is a necessary condition, not a sufficient one; here it changed what was
 learned without making it competitive. Until those changes are made and tested,
 the practical recommendation of the original submission stands, for a
 different reason. Tuned dispatching rules remain the baseline to beat on
-problems of this size and structure. The constrained agent no longer fails to
-satisfy its constraints; it satisfies them either the way a fast-server-biased
-random router does or the way a policy held at the throughput floor by its
-objective does, and in both cases it is more expensive per unit than a rule
+problems of this size and structure. The constrained agent no longer shows a
+systematic constraint failure; it meets the protocol's criterion either the way
+a fast-server-biased random router does, or, under a functioning dual, meets
+the expectation constraint while failing the per-episode criterion on a quarter
+of episodes, and in both cases it is more expensive per unit than a rule
 that looks at the queues.
 
 ### 7.3 Deterministic deployment
@@ -1265,9 +1268,9 @@ instrumentation used to obtain it. A per-step cumulative-rate slack signal
 guaranteed multiplier saturation for any policy, including an oracle, and greedy
 evaluation of a near-uniform policy measured an arbitrary deterministic router
 rather than the policy that was trained. Both artefacts are reproduced and then
-removed on the original checkpoints. With both corrected, the method satisfies
-its constraints on every seed of both testbeds. It does so, however, in the way
-that a fast-server-biased random router satisfies them: the learned policies
+removed on the original checkpoints. With both artefacts corrected, every seed
+satisfies the protocol's validation criterion on both testbeds. It does so,
+however, in the way that a fast-server-biased random router does: the learned policies
 are near-uniform, indistinguishable from round-robin on cost-per-unit under a
 paired bootstrap, and 6.6% more expensive than ShortestQueue on the harder
 testbed. The audit also shows why. In the original and the corrected one-sided
@@ -1276,8 +1279,9 @@ orders of magnitude and the dual update could not release them, so the agent was
 trained to maximise throughput and fast-server utilisation, and cost-efficient
 routing was never effectively part of its objective. The corrected negative
 result is narrower than the original and, we think, more useful. The method did
-not fail to meet its constraints; it failed to learn a cost-efficient
-state-aware routing policy, under an objective that gave it little reason to.
+not fail the protocol's constraint criterion; it failed to learn a
+cost-efficient state-aware routing policy, under an objective that gave it
+little reason to.
 Giving it that reason, with a symmetric dual update and multipliers on the scale
 of the reward, produced a working Lagrangian and a different policy: a
 state-dependent, randomised policy driven to the throughput floor by the
