@@ -1,0 +1,139 @@
+{
+ "means": {
+  "cost-episode-sym/stoch/pooled_cpu": 81.90752313233918,
+  "cost-episode-sym/stoch/pooled_joint": 0.748,
+  "cost-episode-sym/argmax/pooled_cpu": 110.44534110580274,
+  "cost-episode-sym/argmax/pooled_joint": 0.1
+ },
+ "bootstrap": {
+  "cost-episode-sym vs ShortestQueue/cpu": {
+   "diff": 8.653709079884607,
+   "ci": [
+    5.862597346649747,
+    11.38569312444433
+   ],
+   "p": 0.0,
+   "holm_threshold": 0.004166666666666667,
+   "holm_significant": true
+  },
+  "cost-episode-sym vs LeastUtilised/cpu": {
+   "diff": 1.4348135511717857,
+   "ci": [
+    -1.3910130511439949,
+    4.139454460059829
+   ],
+   "p": 0.3156,
+   "holm_threshold": 0.0125,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs RoundRobin/cpu": {
+   "diff": 3.0122846196363326,
+   "ci": [
+    0.16809015288679846,
+    5.860089250242489
+   ],
+   "p": 0.0358,
+   "holm_threshold": 0.0071428571428571435,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs UniformRandom/cpu": {
+   "diff": 1.9935955108743997,
+   "ci": [
+    -1.0496053834789691,
+    4.90018044036575
+   ],
+   "p": 0.197,
+   "holm_threshold": 0.01,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs cost-episode/cpu": {
+   "diff": 3.806341325097307,
+   "ci": [
+    0.9217714582587053,
+    6.6139691557571485
+   ],
+   "p": 0.0122,
+   "holm_threshold": 0.00625,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs shaped-cumrate/cpu": {
+   "diff": -0.20855492967990585,
+   "ci": [
+    -3.215863174891622,
+    2.8011117620147914
+   ],
+   "p": 0.8916,
+   "holm_threshold": 0.05,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs ShortestQueue/joint": {
+   "diff": -0.252,
+   "ci": [
+    -0.33999999999999997,
+    -0.16800000000000004
+   ],
+   "p": 0.0,
+   "holm_threshold": 0.004545454545454546,
+   "holm_significant": true
+  },
+  "cost-episode-sym vs LeastUtilised/joint": {
+   "diff": -0.23199999999999998,
+   "ci": [
+    -0.32399999999999995,
+    -0.14800000000000002
+   ],
+   "p": 0.0,
+   "holm_threshold": 0.005,
+   "holm_significant": true
+  },
+  "cost-episode-sym vs RoundRobin/joint": {
+   "diff": -0.11199999999999999,
+   "ci": [
+    -0.22399999999999998,
+    0.008000000000000007
+   ],
+   "p": 0.073,
+   "holm_threshold": 0.008333333333333333,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs UniformRandom/joint": {
+   "diff": -0.03200000000000003,
+   "ci": [
+    -0.16400000000000003,
+    0.10399999999999998
+   ],
+   "p": 0.6476,
+   "holm_threshold": 0.025,
+   "holm_significant": false
+  },
+  "cost-episode-sym vs cost-episode/joint": {
+   "diff": -0.20399999999999996,
+   "ci": [
+    -0.29999999999999993,
+    -0.1120000000000001
+   ],
+   "p": 0.0,
+   "holm_threshold": 0.005555555555555556,
+   "holm_significant": true
+  },
+  "cost-episode-sym vs shaped-cumrate/joint": {
+   "diff": 0.04800000000000004,
+   "ci": [
+    -0.09600000000000009,
+    0.19200000000000006
+   ],
+   "p": 0.5396,
+   "holm_threshold": 0.016666666666666666,
+   "holm_significant": false
+  }
+ },
+ "severity": {
+  "T50_U0.5": 0.7480000000000001,
+  "T50_U0.7": 0.26,
+  "T54_U0.5": 0.516,
+  "T56_U0.5": 0.364,
+  "T56_U0.7": 0.152,
+  "T58_U0.5": 0.2,
+  "T60_U0.5": 0.10800000000000001
+ }
+}

@@ -8,6 +8,8 @@ OUT=Path("results_r1/r2"); rng=np.random.default_rng(20260905); B=10000
 
 def load(tb):
     d={**json.load(open(OUT/f"episodes_{tb}_rl.json")),**json.load(open(OUT/f"episodes_{tb}_base.json"))}
+    p=OUT/f"episodes_{tb}_r2.json"
+    if p.exists(): d.update(json.load(open(p)))
     cfg=TESTBED_CONFIG[tb]; fast=cfg["constrained_servers"]
     def arr(recs,tmin=cfg["tp_target"],umin=cfg["u_min"]):
         tp=np.array([r["tp"] for r in recs]); cost=np.array([r["cost"] for r in recs])
@@ -67,5 +69,32 @@ def main(tb):
     print("== Holm:"); [print(f"  {k:55s} p={fam[k]['p']:.4f} thr={fam[k]['holm_threshold']:.4f} {'SIG' if fam[k]['holm_significant'] else 'ns'}") for k in order]
     print("== severity (joint sat): SQ LU RR Rand corrected control")
     for k,v in res["severity"].items(): print(f"  {k:10s} "+" ".join(f"{v[n]:.2f}" for n in ["ShortestQueue","LeastUtilised","RoundRobin","UniformRandom","cost-episode/stoch","shaped-cumrate/stoch"]))
+def main_r2(tb):
+    """Amendment R2 §4: the symmetric, reward-scaled cell against six comparators (12 tests, Holm)."""
+    d,arr,cfg=load(tb); res={"means":{},"bootstrap":{},"severity":{}}
+    cell="cost-episode-sym"
+    for mode in ["stoch","argmax"]:
+        for key in ["cpu","joint"]:
+            A=cell_matrix(d,arr,cell,mode,key); res["means"][f"{cell}/{mode}/pooled_{key}"]=float(A.mean())
+            if mode!="stoch": continue
+            for base in ["ShortestQueue","LeastUtilised","RoundRobin","UniformRandom"]:
+                res["bootstrap"][f"{cell} vs {base}/{key}"]=hboot(A,arr(d[f"baseline/{base}"])[key][None,:])
+            for other in ["cost-episode","shaped-cumrate"]:
+                res["bootstrap"][f"{cell} vs {other}/{key}"]=hboot(A,cell_matrix(d,arr,other,"stoch",key))
+    order=sorted(res["bootstrap"],key=lambda k:res["bootstrap"][k]["p"]); m=len(order); rejected=True
+    for i,k in enumerate(order):
+        thr=0.05/(m-i); rejected=rejected and res["bootstrap"][k]["p"]<=thr; res["bootstrap"][k]["holm_threshold"]=thr; res["bootstrap"][k]["holm_significant"]=bool(rejected)
+    T=cfg["tp_target"]; tgrid=[T,T,T+4,T+6,T+6,T+8,T+10]; ugrid=[0.5,0.7,0.5,0.5,0.7,0.5,0.5]
+    ks=sorted(k for k in d if k.startswith(cell+"/") and k.endswith("/stoch"))
+    for tmin,umin in zip(tgrid,ugrid):
+        res["severity"][f"T{tmin}_U{umin}"]=float(np.mean([arr(d[k],tmin,umin)["joint"].mean() for k in ks]))
+    json.dump(res,open(OUT/f"stats_{tb}_r2.json","w"),indent=1)
+    print("== means",json.dumps(res["means"],indent=None))
+    print("== bootstrap (diff, 95% CI, p, Holm)")
+    for k in order:
+        v=res["bootstrap"][k]; print(f"  {k:45s} {v['diff']:+8.3f} [{v['ci'][0]:+8.3f},{v['ci'][1]:+8.3f}] p={v['p']:.4f} thr={v['holm_threshold']:.4f} {'SIG' if v['holm_significant'] else 'ns'}")
+    print("== severity (sym cell):",res["severity"])
+
 if __name__=="__main__":
-    import sys; main(sys.argv[1])
+    import sys
+    (main_r2 if len(sys.argv)>2 and sys.argv[2]=="r2" else main)(sys.argv[1])

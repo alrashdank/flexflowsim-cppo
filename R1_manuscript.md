@@ -7,27 +7,29 @@ title: "Why Constrained Reinforcement Learning Appeared to Fail on Flow-Shop Rou
 A reported failure of a constrained reinforcement learning method can be a
 property of the pipeline rather than of the method. This paper documents two
 such properties in a Lagrangian Proximal Policy Optimization (PPO) study of
-multi-server flow-shop routing, revisiting an earlier submission by the author
-that reported systematic constraint failure on a 12-action electronics testbed.
-First, an episode-level constraint was
-implemented as a per-step penalty on the cumulative throughput rate, a signal
-that is positive while the line fills regardless of the policy; under a
-one-sided dual update it saturates the multiplier for any policy, including an
-oracle (10 of 10 seeds, against 0 of 10 with an episode-level slack). Second,
-near-uniform stochastic policies were evaluated by greedy action selection;
-evaluated stochastically, the same checkpoints move from about 0% to 64–94% joint constraint satisfaction, and
-the archived checkpoints reverse the original verdict without retraining. A
+multi-server flow-shop routing, revisiting an earlier submission that reported
+systematic constraint failure. First, an episode-level constraint was implemented as a per-step penalty on the
+cumulative throughput rate, a signal that is positive while the line fills
+regardless of the policy; under a one-sided dual update it saturates the
+multiplier for any policy, including an oracle (10 of 10 seeds; 0 of 10 with an
+episode-level slack). Second, near-uniform stochastic policies were
+evaluated by greedy action selection; evaluated stochastically, the same
+checkpoints move from about 0% to 64–94% joint satisfaction, reversing the
+original verdict without retraining. A
 corrected formulation at the full pre-registered budget satisfies the validation
-criterion on every seed, at $78.10 ± 1.64 per unit on electronics against $73.25
-for ShortestQueue, but learns near-uniform routers (normalised entropy
-0.94–0.97) indistinguishable from round-robin and uniform-random routing on
-cost-per-unit under a paired hierarchical bootstrap. An audit of the augmented
-objective explains why: in every configuration the constraint terms outweigh the
-cost term by two to four orders of magnitude and the one-sided dual update
-cannot release them, so cost-efficient routing was never effectively optimised.
-Constrained PPO did not fail to satisfy its constraints here; it failed to learn
-a cost-efficient state-aware routing policy competitive with a two-line
-dispatching rule. All code and results are open source.
+criterion on every seed, at $78.10 ± 1.64 per unit against $73.25 for
+ShortestQueue, but learns near-uniform routers indistinguishable from
+round-robin routing on cost-per-unit, because the constraint terms outweigh the
+cost term by two to four orders of magnitude and the one-sided update cannot
+release them. A pre-registered cell with a symmetric update and multipliers on
+the scale of the reward produces a working Lagrangian and a state-dependent
+policy that minimises total cost at the throughput floor, as the stated problem
+asks, and is therefore worse per unit than random routing and infeasible on a
+quarter of episodes: total cost is nearly flat in routing while cost-per-unit
+falls with throughput. Constrained PPO did not fail to satisfy its constraints
+here; it failed to learn a cost-efficient state-aware routing policy, and the
+reason lies in the gap between the objective posed and the metric reported. All
+code and results are open source.
 
 **Keywords:** constrained reinforcement learning, Lagrangian methods, flow-shop
 routing, production scheduling, negative results, reproducibility
@@ -111,16 +113,24 @@ by tilting a near-uniform router toward the fast servers. The method did not
 fail to satisfy its constraints; stateless load-balancing satisfies them too. It
 failed to learn a cost-efficient, state-aware routing policy competitive with a
 two-line dispatching rule, and under the objective it was actually given it had
-little reason to.
+little reason to. A final pre-registered cell gives it that reason, with a
+symmetric dual update and multipliers on the scale of the reward. The dual then
+works, the policy becomes state-dependent, and it minimises total cost at the
+throughput floor as the stated CMDP asks, which makes it worse on
+cost-per-unit than stateless routing and leaves a quarter of episodes
+infeasible under the protocol's per-episode criterion. The reason is measurable
+across every policy in the study: total episode cost is nearly flat in routing,
+throughput is not, and the objective posed is therefore not the metric
+reported.
 
 The scope of the result should be stated plainly. The two artefacts are
 properties of the pipeline, not of constrained reinforcement learning, and the
 first in particular is easy to introduce and difficult to detect from aggregate
 metrics. Correcting them does not make constrained PPO competitive on this
 problem, and it does not make deterministic deployment feasible. What it does is
-replace a wrong negative result with a correct and narrower one, and identify
-the experiment that would test the method proper: a releasable, correctly scaled
-dual update, which this paper specifies but has not run.
+replace a wrong negative result with a correct and narrower one, run the
+experiment that tests the method proper, and locate the remaining failure in
+the formulation rather than in the optimiser.
 
 ## 2. Related work
 
@@ -261,12 +271,13 @@ update penalises the exact per-episode Lagrangian of Eq. (2), but the dual
 update reads a hinged per-episode shortfall, max(0, T_min − TP(τ)), rather than
 the signed expected slack (§4.3), so the multipliers respond to the frequency
 and depth of violations, not to the expected constraint value. The third is the
-selection and reporting criterion: a checkpoint qualifies if both constraints
-hold on at least 16 of 20 validation episodes, and results report the fraction
-of test episodes on which both hold. That is a per-episode joint chance
-constraint, P(TP(τ) ≥ T_min and min_i u_i(τ) ≥ U_min) ≥ 0.8, which is stricter than
-Eq. (2) for any policy whose throughput varies between episodes (§3.4 quantifies
-the gap). The original submission treated the three as interchangeable. They are
+selection and reporting criterion: a checkpoint qualifies if each constraint
+holds on at least 16 of 20 validation episodes, and results report the fraction
+of test episodes on which both hold. Selection therefore imposes two per-episode
+chance constraints, P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8,
+and reporting measures the joint event. Both are stricter than Eq. (2) for any
+policy whose throughput varies between episodes (§3.4 quantifies the gap), and
+§6.7 shows a configuration that satisfies Eq. (2) while failing them. The original submission treated the three as interchangeable. They are
 not, and §4.2 shows that the version implemented in training was a fourth object
 that coincides with none of them.
 
@@ -388,10 +399,13 @@ under a stochastic policy that violates on a persistent fraction of episodes it
 continues to grow, at a rate set by the violation frequency rather than by the
 expected slack. Eqs. (8) and (9) are therefore not a convergent dual ascent
 either; they remove the guaranteed divergence of Eq. (4), not the monotonicity.
-A symmetric variant that uses the signed slack (T_min − TP(τ))/H in Eq. (8),
-and the margin of the binding server in Eq. (9), is implemented and available
-(`--symmetric`) but was not run at full budget; §6.4 explains why it is the
-experiment this paper's results now call for.
+A symmetric variant uses the signed slack (T_min − TP(τ))/H in Eq. (8) and, in
+Eq. (9), the summed shortfall when any constrained server violates and the
+negative margin of the binding server otherwise, so that a multiplier can fall
+back toward zero once its constraint is slack. §6.4 explains why the scale of
+the multipliers matters as much as the hinge, and §6.7 reports the symmetric
+variant at full budget with multipliers on the scale of the reward
+(Protocol Amendment R2).
 
 ### 4.4 Evaluation of a stochastic policy
 
@@ -514,6 +528,21 @@ re-evaluation. The pipeline's own stochastic draws differ from the
 seeded ones by at most $1.2 per unit and 5.6 points of satisfaction at the cell
 level, and no comparison changes direction.
 
+A third protocol document, `protocol_amendment_r2.md`, was committed before the
+runs of §6.7 were launched. It defines one further cell on electronics,
+`cost-episode-sym`: the cost reward and episode slack of the corrected cell with
+the symmetric dual update of §4.3 and multipliers initialised, stepped and
+capped on the scale of the reward (λ_T: 0.1, η_T = 2.0, cap 10; λ_U: 0.002,
+η_U = 0.01, cap 0.2). The values were derived before any run by two independent
+arguments that agree: the shadow price of a unit of throughput implied by the
+baseline interpolation of §3.4 (about 0.1 reward units) and of a busy-step of a
+fast server (about 0.002), and the factor of about 2,400 by which the inherited
+initial multipliers had to be divided to bring the penalty on a typical episode
+to a tenth of the return. The amendment also fixes the pipeline remedy for
+deviation R2-1 (seeded evaluation, per-episode records), lists the comparisons
+to be reported, and states three possible outcomes with the wording each would
+receive. No hyperparameter of the cell was changed after results were seen.
+
 The mechanism ablation of §6.1 predates the amendment and motivated it. It was
 run at a reduced budget of 400K steps with argmax checkpoint selection, as in the
 original protocol, and both evaluation modes recorded. It is not repeated at full
@@ -536,7 +565,8 @@ pre-specified family on each testbed, the corrected cell against ShortestQueue,
 LeastUtilised, RoundRobin, UniformRandom and the original signal on
 cost-per-unit and on joint satisfaction, and are adjusted by the Holm procedure
 at α = 0.05. Comparisons involving the control cell alone are reported without
-adjustment as descriptive.
+adjustment as descriptive. The cell of §6.7 forms its own family of twelve
+tests, against the same four rules and both full-budget cells.
 
 ## 6. Results
 
@@ -620,7 +650,8 @@ episodes) of the corrected cell, evaluated stochastically, against each
 comparator. Entries are the difference in means (corrected minus comparator)
 with 95% percentile interval; Δsat. is in percentage points. p is two-sided;
 asterisks mark the comparisons that survive the Holm adjustment over the ten
-tests on each testbed.
+tests on each testbed, or over the twelve tests of the symmetric cell's own
+family.
 
 | Testbed | Comparator | ΔCPU ($) | p | Δsat. (pp) | p |
 |--------|-----------|------------------|-------|------------------|-------|
@@ -634,6 +665,12 @@ tests on each testbed.
 | bakery | RoundRobin | +3.52 [−1.02, +8.06] | 0.13 | +6.4 [−2.4, +16.4] | 0.18 |
 | bakery | UniformRandom | +0.02 [−3.93, +3.88] | 0.99 | +4.4 [−4.0, +14.0] | 0.35 |
 | bakery | original signal | +1.46 [−1.79, +4.78] | 0.38 | +8.0 [0.0, +17.2] | 0.063 |
+| electronics, symmetric cell (§6.7) | ShortestQueue | +8.65 [+5.86, +11.39] | < 0.001* | −25.2 [−34.0, −16.8] | < 0.001* |
+| electronics, symmetric cell (§6.7) | LeastUtilised | +1.44 [−1.39, +4.14] | 0.32 | −23.2 [−32.4, −14.8] | < 0.001* |
+| electronics, symmetric cell (§6.7) | RoundRobin | +3.01 [+0.17, +5.86] | 0.036 | −11.2 [−22.4, +0.8] | 0.073 |
+| electronics, symmetric cell (§6.7) | UniformRandom | +1.99 [−1.05, +4.90] | 0.20 | −3.2 [−16.4, +10.4] | 0.65 |
+| electronics, symmetric cell (§6.7) | corrected (hinged) | +3.81 [+0.92, +6.61] | 0.012 | −20.4 [−30.0, −11.2] | < 0.001* |
+| electronics, symmetric cell (§6.7) | original signal | −0.21 [−3.22, +2.80] | 0.89 | +4.8 [−9.6, +19.2] | 0.54 |
 
 Four results follow. First, every seed in every cell satisfies the validation
 criterion, including the unmodified original signal, which under the original
@@ -775,14 +812,11 @@ cost-efficient routing, and it is independent of the two artefacts. It follows
 from two design choices inherited unchanged from the original submission: the
 multiplier initial values and step sizes, which were set in the units of the
 per-step signal of Eq. (4) and are large relative to a reward whose episode
-return is of order ten; and the hinge in the dual update. The experiment that would
-test the method proper is the symmetric variant of §4.3 with the multipliers
+return is of order ten; and the hinge in the dual update. The experiment that tests
+the method proper is the symmetric variant of §4.3 with the multipliers
 initialised and stepped on the scale of the reward, so that they can settle at
-zero when the constraints are slack and the cost term can be felt. We have
-implemented it but not run it at full budget, and we do not speculate about its
-outcome: a releasable multiplier reintroduces the oscillation between cost
-minimisation and constraint violation that PID-Lagrangian methods (Stooke et al.,
-2020) exist to damp, and the conservative attractor of §3.2 is waiting at λ = 0.
+zero when the constraints are slack and the cost term can be felt. §6.7 reports
+it.
 
 ### 6.5 Structure of the learned policies
 
@@ -814,6 +848,7 @@ parentheses.
 | electronics | original signal | 0.96–0.98 | 10.9–11.5 of 12 | 0.13–0.18 | 0.019 (0.014–0.026) | 9.2% | 24.3% |
 | bakery | corrected | 0.91–0.98 | 3.5–3.9 of 4 | 0.31–0.44 | 0.154 (0.021–0.281) | 39.4% | 11.4% |
 | bakery | original signal | 0.95–0.99 | 3.7–3.9 of 4 | 0.29–0.40 | 0.113 (0.027–0.214) | 33.4% | 15.3% |
+| electronics | symmetric, rescaled (§6.7) | 0.63–0.83 | 4.8–7.8 of 12 | 0.28–0.48 | 0.179 (0.070–0.287) | 9.7% | 10.2% |
 
 The learned policies are near-uniform routers with a modest tilt. On electronics
 the most probable route at a typical decision carries 13–18% of the mass against
@@ -841,7 +876,9 @@ reason to be feasible; the wide argmax confidence intervals of Table 3 follow.
 On bakery, with four routes, the gaps are larger and the agreement higher, and
 the argmax feasibility rate of 54% in Table 3 is correspondingly better,
 although the per-seed range of the gap (0.02 to 0.28) shows that some seeds
-learned a decided preference and others none.
+learned a decided preference and others none. The last row of Table 6, the
+symmetric cell of §6.7, is the one configuration whose policies are not
+near-uniform; it is discussed there.
 
 Two robustness checks. First, single-draw stochastic evaluation introduces
 sampling variance of its own. Re-evaluating the electronics corrected seed 42
@@ -868,24 +905,25 @@ on policies trained for the stricter ones, and it is reported as such.
 **Table 7.** Joint constraint satisfaction on the 50 test episodes at
 alternative thresholds, without retraining. SQ ShortestQueue, LU LeastUtilised,
 RR RoundRobin, Random UniformRandom; "corrected" and "original" are the two
-full-budget cells evaluated stochastically and pooled over five seeds. The
+full-budget cells and "symmetric" the cell of §6.7, evaluated stochastically and
+pooled over five seeds (the symmetric cell was run on electronics only). The
 first row of each testbed is the protocol threshold.
 
-| Testbed | T_min | U_min | SQ | LU | RR | Random | corrected | original |
-|----------|------|------|------|------|------|--------|-----------|----------|
-| electronics | 50 | 0.50 | 100% | 98% | 86% | 78% | 95% | 70% |
-| electronics | 50 | 0.70 | 96% | 96% | 28% | 16% | 71% | 19% |
-| electronics | 54 | 0.50 | 96% | 82% | 66% | 54% | 80% | 47% |
-| electronics | 56 | 0.50 | 92% | 64% | 40% | 34% | 64% | 30% |
-| electronics | 56 | 0.70 | 90% | 64% | 18% | 12% | 58% | 14% |
-| electronics | 58 | 0.50 | 86% | 34% | 30% | 24% | 46% | 19% |
-| electronics | 60 | 0.50 | 74% | 16% | 14% | 14% | 30% | 10% |
-| bakery | 18 | 0.50 | 96% | 90% | 88% | 90% | 94% | 86% |
-| bakery | 18 | 0.70 | 88% | 88% | 44% | 54% | 84% | 55% |
-| bakery | 19 | 0.50 | 86% | 72% | 78% | 82% | 85% | 75% |
-| bakery | 20 | 0.50 | 68% | 46% | 60% | 60% | 64% | 58% |
-| bakery | 20 | 0.70 | 62% | 46% | 22% | 34% | 57% | 40% |
-| bakery | 21 | 0.50 | 44% | 32% | 46% | 32% | 40% | 41% |
+| Testbed | T_min | U_min | SQ | LU | RR | Random | corrected | original | symmetric |
+|----------|------|------|------|------|------|--------|-----------|----------|----------|
+| electronics | 50 | 0.50 | 100% | 98% | 86% | 78% | 95% | 70% | 75% |
+| electronics | 50 | 0.70 | 96% | 96% | 28% | 16% | 71% | 19% | 26% |
+| electronics | 54 | 0.50 | 96% | 82% | 66% | 54% | 80% | 47% | 52% |
+| electronics | 56 | 0.50 | 92% | 64% | 40% | 34% | 64% | 30% | 36% |
+| electronics | 56 | 0.70 | 90% | 64% | 18% | 12% | 58% | 14% | 15% |
+| electronics | 58 | 0.50 | 86% | 34% | 30% | 24% | 46% | 19% | 20% |
+| electronics | 60 | 0.50 | 74% | 16% | 14% | 14% | 30% | 10% | 11% |
+| bakery | 18 | 0.50 | 96% | 90% | 88% | 90% | 94% | 86% | – |
+| bakery | 18 | 0.70 | 88% | 88% | 44% | 54% | 84% | 55% | – |
+| bakery | 19 | 0.50 | 86% | 72% | 78% | 82% | 85% | 75% | – |
+| bakery | 20 | 0.50 | 68% | 46% | 60% | 60% | 64% | 58% | – |
+| bakery | 20 | 0.70 | 62% | 46% | 22% | 34% | 57% | 40% | – |
+| bakery | 21 | 0.50 | 44% | 32% | 46% | 32% | 40% | 41% | – |
 
 Two patterns emerge. Raising the utilisation floor separates the policies that
 route preferentially to the fast servers from those that do not: at U_min = 0.70
@@ -905,6 +943,106 @@ selection rule (§3.3) enforced an effective floor less than one throughput
 standard deviation above T_min (§3.4). Whether an agent trained against the stricter thresholds
 would learn it is a retraining experiment, not a re-scoring, and is outside this
 paper.
+
+### 6.7 A functioning dual: the symmetric, reward-scaled cell
+
+The cell defined by Protocol Amendment R2 (§5.3) removes the two features that
+§6.4 identified as keeping the corrected cell's multipliers far from
+equilibrium: the hinge, replaced by the signed update, and the inherited scale,
+replaced by multipliers on the scale of the reward. Five seeds, 1.6M steps,
+electronics, stochastic selection, both evaluation modes. Table 8 reports the
+per-seed results and Figure 2 the dynamics.
+
+**Table 8.** Symmetric, reward-scaled cell (Amendment R2), electronics, per
+seed. λ_T statistics are over the 3,352 training episodes; the penalty ratio is
+|Σ p_t| / |Σ r_t| on the test episodes at the training-mean multipliers. CIs
+are 95% t-intervals across seeds.
+
+| Seed | Selected checkpoint | Stochastic CPU | Stoch. TP | Stoch. joint sat. | Argmax CPU | Argmax TP | λ_T mean / max | Penalty ratio |
+|------|-----------|----------|--------|--------|----------|--------|-------------|--------|
+| 42 | 601K | $81.89 | 54.6 | 80% | $107.78 | 43.4 | 0.09 / 0.73 | 0.12 |
+| 7 | 300K | $84.87 | 52.2 | 78% | $106.10 | 43.5 | 0.06 / 0.50 | 0.08 |
+| 2024 | 200K | $80.92 | 53.9 | 76% | $135.70 | 34.4 | 0.06 / 0.46 | 0.09 |
+| 123 | 300K | $77.80 | 57.0 | 72% | $92.76 | 48.1 | 0.13 / 1.48 | 0.14 |
+| 999 | 1,103K | $84.05 | 52.6 | 68% | $109.88 | 39.6 | 0.07 / 0.55 | 0.07 |
+| mean ± CI | | $81.91 ± 3.47 | 54.1 ± 2.4 | 74.8% | $110.45 ± 19.40 | 41.8 ± 6.3 | | |
+
+![](fig_symmetric.png){width=16cm}\
+
+**Figure 2.** The symmetric, reward-scaled cell during training, five seeds.
+(a) λ_T per episode on a linear scale; the dashed line is the shadow-price
+estimate of 0.1 from which the initial value was set. (b) Throughput slack
+TP − T_min per training episode, 50-episode moving average; the dashed line is
+the mean slack of uniform-random routing on the test episodes (+4.4).
+
+The dual now behaves as a dual. λ_T is released to zero within a few episodes
+whenever the constraint is slack, rises when it is violated, and spends training
+oscillating between 0 and about 0.5, with a training mean of 0.06–0.13 per seed
+that brackets the a priori shadow-price estimate; it is positive on 60–72% of
+episodes and never approaches its cap (one excursion to 1.5 on seed 123). λ_U
+behaves the same way at its own scale (mean 0.002–0.003). The constraint terms
+are consequently on the scale of the cost term throughout: 7–14% of the return
+at the training-mean multipliers and 0.6–1.5 times the return at the
+multipliers' peaks, against 190–10,000 times in the corrected cell.
+
+The policy responds as a total-cost minimiser should. Within the first 400K
+steps mean throughput per training episode falls from the level of random
+routing, 4.4 units above T_min, to 1–3 units above it, and stays there for the
+rest of training (Figure 2b); 24–39% of training episodes fall below T_min in
+every quarter of every seed. The expectation constraint of Eq. (2) is satisfied,
+with a margin of one to three units, and the per-episode chance constraint of
+the selection rule is not: of the 95 checkpoints validated, 14 qualify under
+the 16-of-20 rule, eight of them at or before 600K steps, and joint satisfaction
+on stochastic validation fluctuates between 2 and 18 of 20 episodes across
+checkpoints with no trend. Four of the five selected checkpoints are early
+(200K–600K; the fifth is at 1.1M), and on test the cell satisfies both
+constraints jointly on 74.8% of episodes, 20 points
+below the corrected cell (Table 4: −20.4 [−30.0, −11.2], significant after
+adjustment) and 25 below ShortestQueue.
+
+On cost-per-unit the cell is worse, not better. Its $81.91 ± 3.47 is
+significantly above ShortestQueue (+$8.65) and not distinguishable from
+RoundRobin, UniformRandom, LeastUtilised or the original signal; against the
+corrected cell it is $3.81 [+0.92, +6.61] more expensive, a difference that does
+not survive adjustment (p = 0.012 against a Holm threshold of 0.006). Nor is it
+a better total-cost minimiser than the rules it was measured against. Mean
+episode cost is $4,414 for this cell against $4,342 for RoundRobin, $4,347 for
+UniformRandom, $4,445 for the corrected cell and $4,493 for ShortestQueue: the
+range of total cost across every load-spreading policy in this study is 4%,
+because the work to be processed is fixed by the arrival process and routing
+changes only which server does it and how long jobs wait, while throughput
+across the same policies spans 13% (54–61 units). An objective that is flat in
+routing and indifferent to throughput above the floor has little to teach a
+policy gradient about routing, and what it does teach, that throughput above
+the floor is not worth paying for, is the opposite of what cost-per-unit
+rewards.
+
+What the cell did learn is a different kind of policy from every other cell in
+this paper. Its action distributions are concentrated: normalised entropy
+0.63–0.83 against 0.94–0.97, 4.8–7.8 effective routes against 10.4–11.3, mean
+top-1 probability 0.28–0.48 against 0.13–0.18, and a top-1 gap eight times
+larger (Table 6). Yet its marginal route frequencies over an episode remain
+near-uniform (normalised entropy 0.89–0.96), so the concentration is
+state-dependent: the policy routes differently in different states, which the
+near-uniform cells did not. It is also a randomised policy in the sense of §2.2
+rather than a near-uniform one. Its argmax is a coherent conservative router,
+throughput 41.8 and $110 per unit, feasible on 10% of episodes, while the
+stochastic policy from which it is extracted reaches 54 units at $82. The
+randomisation carries a quarter of the throughput. Greedy extraction from this
+cell fails for the reason the CMDP literature predicts, not because the logits
+are flat: two seeds' greedy policies still agree on only 10% of states, but
+logit noise of 0.1 now moves the greedy action at 10% of states rather than 25%.
+
+The outcome is the second of the three the amendment listed. A functioning dual
+on the stated CMDP does not produce a policy competitive with ShortestQueue on
+either metric; it produces a state-dependent, randomised total-cost minimiser
+that sits at the throughput floor, satisfies the expectation constraint, fails
+the per-episode criterion on a quarter of episodes, and costs more per unit than
+stateless routing. The failure to learn cost-efficient routing in the corrected
+cell was attributable to the multiplier scale in one respect only: with the
+constraint terms on the reward scale, PPO does move away from the uniform
+policy. Where it moves is governed by the objective it was given, and that
+objective is not cost-per-unit.
 
 ## 7. Discussion
 
@@ -947,43 +1085,68 @@ ShortestQueue, which reads the queue state and requires no training, is 6.6%
 cheaper per unit than the best learned policy on electronics with 100%
 constraint satisfaction, and is indistinguishable from it on bakery.
 
-§6.4 supplies the reason, and it is not the one the original submission gave.
-The agent was not defeated by a penalty that overwhelmed its objective; its
-objective was, for all practical purposes, the constraint terms. With the
-multipliers two to four orders of magnitude above the scale of the cost term,
-never released by the hinged update, and with both constraints slack under any
-load-spreading policy, the augmented return rewarded surplus throughput and
-surplus fast-server busy time and registered cost only in the third or fourth
-significant figure. A near-uniform router tilted toward the fast servers is a
-reasonable response to that objective, and it is what every cell produced. The
-phrase "failed to learn" must therefore be qualified: constrained PPO failed to
-learn a cost-efficient, state-aware routing policy competitive with
-ShortestQueue, and under the objective it was actually given it was never
-seriously asked to. The entropy coefficient of 0.01, retained from the original
-submission for comparability, works in the same direction, and the noisy,
-delayed credit assignment of a departure-driven reward is a plausible reason
-the policies moved so little even toward throughput.
+§6.4 supplies the reason for the near-uniform policies, and it is not the one
+the original submission gave. The agent was not defeated by a penalty that
+overwhelmed its objective; its objective was, for all practical purposes, the
+constraint terms. With the multipliers two to four orders of magnitude above the
+scale of the cost term, never released by the hinged update, and with both
+constraints slack under any load-spreading policy, the augmented return
+rewarded surplus throughput and surplus fast-server busy time and registered
+cost only in the third or fourth significant figure. A near-uniform router
+tilted toward the fast servers is a reasonable response to that objective, and
+it is what every hinged cell produced. The entropy coefficient of 0.01,
+retained from the original submission for comparability, works in the same
+direction.
 
-The experiment this leaves open is the one §6.4 specifies: a symmetric dual
-update with multipliers initialised and stepped on the scale of the reward, so
-that they can settle near zero when the constraints are slack. Whether PPO then
-learns state-aware routing, or falls into the conservative attractor of §3.2
-and oscillates, is an open question that this paper's data cannot answer. A
-ratio objective (§3.4) and a smaller entropy coefficient are secondary
-candidates. Until that experiment is run, the practical recommendation of the
-original submission stands, for a different reason. Tuned dispatching rules
-remain the baseline to beat on problems of this size and structure. The
-constrained agent no longer fails to satisfy its constraints; it satisfies them
-the way a fast-server-biased random router does, and is still more expensive
-than a rule that looks at the queues.
+§6.7 then closes the question that §6.4 opens. With the multipliers on the scale
+of the reward and free to fall, PPO does leave the uniform policy: the
+symmetric cell's action distributions are concentrated and state-dependent, and
+its argmax is a coherent conservative router rather than an arbitrary one. What
+it learns is a total-cost minimiser at the throughput floor, which is what the
+CMDP of Eq. (2) asks for, and that policy is worse on cost-per-unit than
+stateless routing and satisfies the per-episode criterion on only three
+quarters of episodes. The mechanism is the one §3.4 anticipated from two data
+points and §6.7 measures across every policy in the study: total episode cost
+is nearly flat in routing, throughput is not, and cost-per-unit therefore falls
+with throughput across the whole operating range. A total-cost minimiser has no
+reason to buy throughput above the floor, so a working Lagrangian moves the
+policy away from the region where cost-per-unit is lowest, and the chance
+constraint that the protocol actually checks is stricter than the expectation
+constraint the Lagrangian actually enforces. The phrase "failed to learn"
+therefore needs two qualifications. Constrained PPO failed to learn a
+cost-efficient, state-aware routing policy competitive with ShortestQueue. In
+the hinged cells it was never seriously asked to, because cost had negligible
+weight in the objective; in the symmetric cell it was asked to minimise a
+quantity that is not the metric, and did so.
+
+Three consequences follow for anyone posing this problem to a constrained
+learner. The objective must be the metric: a ratio objective (§3.4), or a
+throughput term with a weight set by the reported cost-per-unit rather than by
+a constraint, is not optional here. The constraint must be the one the protocol
+checks: a per-episode chance constraint needs a per-episode formulation, for
+instance a penalty on the indicator of violation or a conditional-value-at-risk
+constraint, rather than an expectation constraint whose satisfaction with a
+one-unit margin leaves a quarter of episodes infeasible. And a functioning dual
+is a necessary condition, not a sufficient one; here it changed what was
+learned without making it competitive. Until those changes are made and tested,
+the practical recommendation of the original submission stands, for a
+different reason. Tuned dispatching rules remain the baseline to beat on
+problems of this size and structure. The constrained agent no longer fails to
+satisfy its constraints; it satisfies them either the way a fast-server-biased
+random router does or the way a total-cost minimiser at the floor does, and in
+both cases it is more expensive per unit than a rule that looks at the queues.
 
 ### 7.3 Deterministic deployment
 
 Feasible deterministic policies exist on both testbeds; ShortestQueue is one.
 What we did not obtain is a feasible deterministic policy *from the learned
-agent* on electronics: greedy extraction from a near-uniform distribution yields
-an arbitrary route, and no configuration we tested produced a learned policy
-concentrated enough for its argmax to be reliable. In plants that cannot deploy a
+agent* on electronics, for two different reasons in the two kinds of cell.
+Greedy extraction from the near-uniform distributions of the hinged cells yields
+an arbitrary route. Greedy extraction from the concentrated distributions of
+the symmetric cell yields a coherent but conservative router, feasible on 10% of
+episodes, because the randomisation carries a quarter of the throughput (§6.7);
+this is the randomised-optimum structure of §2.2 observed directly, and no
+configuration we tested produced a learned policy whose argmax was reliable. In plants that cannot deploy a
 stochastic controller, and there are good reasons for such a requirement,
 including auditability and operator trust, the learned policies of this paper
 are not deployable, and the correction described here does not change that. The
@@ -1060,13 +1223,19 @@ independent of data from the same study.
 two off-diagonal cells were not run at full budget; see §5.3 for the
 justification. The attribution should be treated as established at 400K only.
 
-**The corrected cell is not the method proper.** §6.4 shows that the corrected
-cell optimises the exact Lagrangian of Eq. (2) at multiplier values that never
-approach their equilibrium, so its results characterise a hinged, heavily
-weighted Lagrangian and not constrained PPO with a functioning dual. The
-symmetric, rescaled variant that would test the latter is specified in §4.3 and
-§6.4 and has not been run. Claims in this paper about "what the method learned"
-are claims about the configuration studied.
+**One symmetric configuration.** §6.4 shows that the corrected cell optimises
+the exact Lagrangian of Eq. (2) at multiplier values that never approach their
+equilibrium, so its results characterise a hinged, heavily weighted Lagrangian.
+The symmetric cell of §6.7 tests constrained PPO with a functioning dual, but in
+one configuration only: multiplier scales fixed a priori by Amendment R2, plain
+dual ascent without PID damping or averaging, the original entropy coefficient,
+and electronics only. Its λ_T oscillates rather than converging (Figure 2a), and
+a damped or averaged dual, or a different step size, might select different
+checkpoints. We regard the mechanism it exposes, a total-cost objective that is
+flat in routing and indifferent to throughput above the floor, as robust to
+those choices, because it is a property of the objective measured across every
+policy in the study (§6.7), but the cell's numbers are those of one
+configuration.
 
 **Segmented training.** Full-budget runs flush the rollout buffer three times per
 run. We regard the effect as negligible but have not measured it directly.
@@ -1095,21 +1264,30 @@ routing was never effectively part of its objective. The corrected negative
 result is narrower than the original and, we think, more useful. The method did
 not fail to meet its constraints; it failed to learn a cost-efficient
 state-aware routing policy, under an objective that gave it little reason to.
-Separating those claims required reporting the constraint actually implemented,
-the scale of the penalty against the objective, the evaluation mode actually
-used, and a random-routing control with its own uncertainty, and we would
-encourage all four as routine practice. The experiment that would test the
-method itself, a releasable dual on the scale of the reward, is specified here
-and remains to be run.
+Giving it that reason, with a symmetric dual update and multipliers on the scale
+of the reward, produced a working Lagrangian and a different policy: a
+state-dependent, randomised total-cost minimiser at the throughput floor, which
+satisfies the expectation constraint it was given, fails the per-episode
+criterion the protocol checks on a quarter of episodes, and is more expensive
+per unit than stateless routing, because total cost is nearly flat in routing
+while cost-per-unit falls with throughput. Neither the artefacts nor their
+correction make constrained PPO competitive with a two-line rule on this
+problem; the reason is now located in the formulation, in the gap between the
+objective posed and the metric reported, and between the constraint enforced
+and the constraint checked. Separating those claims required reporting the
+constraint actually implemented, the scale of the penalty against the objective,
+the evaluation mode actually used, and a random-routing control with its own
+uncertainty, and we would encourage all four as routine practice.
 
 ## Data availability
 
 FlexFlowSim-CPPO (Author, 2026b), the pre-registered protocol (`protocol.md`,
 commit 391eb0d),
 Protocol Amendment R1 (`protocol_amendment_r1.md`), the corrected wrapper
-(`lagrangian_slack.py`), the ablation and archival runners, the policy-entropy
-and R2 analysis scripts, and all per-seed results, λ histories and per-episode
-test records are available at [URL withheld for review].
+(`lagrangian_slack.py`), Protocol Amendment R2 (`protocol_amendment_r2.md`),
+the ablation and archival runners, the policy-entropy and R2 analysis scripts,
+and all per-seed results, λ histories and per-episode test records are
+available at [URL withheld for review].
 
 ## Funding
 
@@ -1264,11 +1442,12 @@ with per-checkpoint caching, selection, and test); the archival re-evaluation of
 repeated-draw check of §6.5 by analysis_stateless_and_entropy.py; and the seeded
 per-episode re-evaluation, argmax-stability metrics, paired hierarchical
 bootstrap and severity re-scoring of §5.2, §6.2, §6.5 and §6.6 by
-analysis_r2.py, analysis_r2_stats.py and analysis_r2_tables.py. The
-pre-committed protocol is protocol.md (commit 391eb0d); its amendment is
-protocol_amendment_r1.md; deviations are in protocol_deviations.md. All
-per-seed summaries, validation caches, λ histories and per-episode test records
-are under results_r1/, with the seeded records under results_r1/r2/.
+analysis_r2.py, analysis_r2_stats.py and analysis_r2_tables.py; Figure 2 by
+make_fig_r2.py. The pre-committed protocol is protocol.md (commit 391eb0d); its
+amendments are protocol_amendment_r1.md and protocol_amendment_r2.md;
+deviations are in protocol_deviations.md. All per-seed summaries, validation
+caches, λ histories and per-episode test records are under results_r1/ and
+results_r2/, with the seeded records under results_r1/r2/.
 
 ### A.2 Hyperparameters
 
@@ -1280,14 +1459,20 @@ loop, identical in both slack modes: U_min = 0.50; T_min = 18 (bakery) or 50
 (electronics); λ_U initial 5, step η_U = 20, cap 500; λ_T initial 200, step
 η_T = 4000, cap 20,000. The cumulative-rate mode applies a 100-step warm-up; the
 episode mode applies none (§4.3). Multipliers are updated once per episode in
-both modes.
+both modes. The symmetric cell of §6.7 (Amendment R2) uses the signed update
+with λ_T initial 0.1, η_T = 2.0, cap 10 and λ_U initial 0.002, η_U = 0.01,
+cap 0.2; all PPO hyperparameters unchanged.
 
 ### A.3 Budgets and seeds
 
 Training seeds [42, 7, 2024, 123, 999] throughout. Mechanism ablation (§6.1):
 400K timesteps per run, four cells, electronics only. Full-budget comparison
 (§6.2): 1.6M timesteps on electronics and 1.5M on bakery, two cells, executed in
-400K-step segments (§5.3). Checkpoints every 100K timesteps in all runs.
+400K-step segments (§5.3); symmetric cell (§6.7): 1.6M timesteps, electronics,
+same segments and seeds. Checkpoints every 100K timesteps in all runs; because
+PPO completes whole 2,048-step rollouts, checkpoint labels are nominal and
+actual step counts exceed them by up to 4,224 steps (0.3%), identically in
+every cell.
 Validation seeds [10000, 10020); test seeds [11000, 11050); both disjoint from
 training. All dispatching rules (Table 1) are evaluated on the 50 test seeds,
 with UniformRandom's action sampling seeded by the episode seed. The
@@ -1338,7 +1523,8 @@ a full 1.6M-step run about 30 minutes plus 10–15 minutes of dual-mode
 validation over 16 checkpoints. The full R1 matrix (20 pilot runs, 20 full-budget
 runs, 18 archival re-evaluations of 279 checkpoints, baselines and analyses)
 consumed approximately 16 compute-hours; the seeded per-episode re-evaluations
-and analyses of R2 (about 5,400 further evaluation episodes) roughly one more. The original submission's runs were
+and analyses of R2 (about 5,400 further evaluation episodes) roughly one more,
+and the five symmetric-cell runs of §6.7 about three and a half. The original submission's runs were
 executed on a consumer-grade Windows machine at roughly 20–22 minutes per
 1.5–1.6M-step run.
 

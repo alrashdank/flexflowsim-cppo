@@ -19,11 +19,13 @@ def rollout(policy_fn, tb, seed):
     return dict(seed=int(seed),tp=float(info["total_departed"]),cost=float(info["total_cost"]),util=[float(u) for u in info["utilisation"]])
 
 def episodes(tb, stage):
-    """stage 'rl': all full-budget selected checkpoints, both modes. stage 'base': rules."""
+    """stage 'rl': all full-budget selected checkpoints, both modes. stage 'base': rules.
+    stage 'r2': the Amendment R2 cell (results_r2)."""
     recs={}
-    if stage=="rl":
-        for cell in ["cost-episode","shaped-cumrate"]:
-            for p in sorted(glob.glob(f"results_r1/{tb}/{cell}/seed_*/summary.json")):
+    if stage in ("rl","r2"):
+        root,cells=("results_r1",["cost-episode","shaped-cumrate"]) if stage=="rl" else ("results_r2",["cost-episode-sym"])
+        for cell in cells:
+            for p in sorted(glob.glob(f"{root}/{tb}/{cell}/seed_*/summary.json")):
                 s=json.load(open(p)); m=PPO.load(p.replace("summary.json",f"checkpoints/ckpt_{s['selected_steps']}_steps"),device="cpu")
                 for mode,det in [("stoch",False),("argmax",True)]:
                     fn=lambda obs,env,m=m,det=det: int(m.predict(obs,deterministic=det)[0])
@@ -43,7 +45,7 @@ def episodes(tb, stage):
             recs[f"baseline/{name}"]=out
     path=OUT/f"episodes_{tb}_{stage}.json"; json.dump(recs,open(path,"w")); print("wrote",path,len(recs),"policies")
 
-def argmax_stability(tb, n_eps=5, sigmas=(0.05,0.1)):
+def argmax_stability(tb, n_eps=5, sigmas=(0.05,0.1), root="results_r1", cells=("cost-episode","shaped-cumrate"), tag=""):
     cfg=TESTBED_CONFIG[tb]; res={}
     # reference state set: states visited under UniformRandom on the first n_eps test seeds
     states=[]
@@ -52,9 +54,9 @@ def argmax_stability(tb, n_eps=5, sigmas=(0.05,0.1)):
         while not done:
             states.append(obs.copy()); obs,_,t1,t2,_=env.step(int(rng.integers(env.action_space.n))); done=t1 or t2
     S=torch.as_tensor(np.array(states),dtype=torch.float32)
-    for cell in ["cost-episode","shaped-cumrate"]:
+    for cell in cells:
         argmaxes=[]; margins=[]; flips={s:[] for s in sigmas}
-        for p in sorted(glob.glob(f"results_r1/{tb}/{cell}/seed_*/summary.json")):
+        for p in sorted(glob.glob(f"{root}/{tb}/{cell}/seed_*/summary.json")):
             s=json.load(open(p)); m=PPO.load(p.replace("summary.json",f"checkpoints/ckpt_{s['selected_steps']}_steps"),device="cpu")
             with torch.no_grad():
                 logits=m.policy.get_distribution(S).distribution.logits; pr=torch.softmax(logits,-1)
@@ -68,7 +70,7 @@ def argmax_stability(tb, n_eps=5, sigmas=(0.05,0.1)):
                        cross_seed_argmax_agreement=float(np.mean(pair)),chance_agreement=1/ int(cfg and FlexFlowSimEnv(config=cfg["config"],weights=W,seed=0).action_space.n),
                        flip_rate={str(s):float(np.mean(v)) for s,v in flips.items()})
         print(cell,json.dumps(res[cell],indent=None)[:300])
-    json.dump(res,open(OUT/f"argmax_stability_{tb}.json","w"),indent=2)
+    json.dump(res,open(OUT/f"argmax_stability_{tb}{tag}.json","w"),indent=2)
 
 def pilot(cells):
     tb="electronics"; recs={}
@@ -99,7 +101,8 @@ def archival(which):
 
 if __name__=="__main__":
     what=sys.argv[1]; tb=sys.argv[2]
-    if what in("rl","base"): episodes(tb,what)
+    if what in("rl","base","r2"): episodes(tb,what)
     elif what=="stab": argmax_stability(tb)
+    elif what=="stab_r2": argmax_stability(tb,root="results_r2",cells=("cost-episode-sym",),tag="_r2")
     elif what=="arch": archival(tb)
     elif what=="pilot": pilot(tb)
