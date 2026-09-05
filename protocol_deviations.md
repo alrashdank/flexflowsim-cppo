@@ -122,3 +122,37 @@ observed; replacing seed 999 post-hoc would constitute selection-after-observati
 
 which is the exact form of cherry-picking the protocol exists to prevent.
 
+
+
+## Deviation R2-1 (5 September 2026): seeding of stochastic evaluation, and the "joint satisfaction" aggregate
+
+**What Amendment R1 §A2.3 specified.** Action sampling in stochastic evaluation
+"uses the run's own seed offset by the episode seed".
+
+**What was implemented.** `run_ablation_2x2.py` and `archival_reeval.py` call
+`model.predict(obs, deterministic=False)` without seeding the torch generator.
+Stochastic validation and test draws therefore came from the process-global
+generator (seeded by Stable-Baselines3 at model construction and advanced by
+training). They are single draws and are not reproducible without re-running
+training. The same scripts aggregated "joint satisfaction" across seeds as
+min(mean util-satisfied, mean tp-satisfied), which is an upper bound on the
+per-episode joint rate, not the joint rate itself.
+
+**Consequence and remedy.**
+- Checkpoint selection stands as executed. It read the unseeded stochastic
+  validation draws, which are archived per checkpoint in `validation_cache.json`.
+- Every stochastic *test* figure reported from R2 onwards is a seeded
+  re-evaluation of the selected checkpoints (`analysis_r2.py`): before each
+  episode the torch generator is seeded with the episode seed, so the action
+  stream is reproducible and common across policies evaluated on the same
+  episode. Per-episode records (cost, throughput, per-server utilisation) are
+  archived under `results_r1/r2/`, and joint satisfaction is computed per
+  episode. Argmax figures are unaffected (deterministic) and reproduce the R1
+  values to the cent, which is the fidelity check on the re-evaluation.
+- The unseeded pipeline draws remain in each run's `summary.json`
+  (`stoch_test_*`) and in `results_r1/archival/*/summary.json`. Cell-level
+  differences between the two draws: cost-per-unit ≤ $1.2 (bakery corrected,
+  $139.95 vs $141.07) and joint satisfaction ≤ 5.6 pp (electronics control,
+  75.6% vs 70.0%); no comparison changes direction.
+- A2.3's wording "run seed offset by the episode seed" is superseded by
+  "episode seed" (common random numbers across policies).

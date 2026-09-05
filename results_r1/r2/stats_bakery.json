@@ -1,0 +1,685 @@
+{
+ "means": {
+  "baseline/LeastUtilised": {
+   "cpu": 145.63153079966833,
+   "tp": 19.64,
+   "joint": 0.9
+  },
+  "baseline/RoundRobin": {
+   "cpu": 137.54587403736517,
+   "tp": 20.38,
+   "joint": 0.88
+  },
+  "baseline/ShortestQueue": {
+   "cpu": 138.66297480046958,
+   "tp": 20.48,
+   "joint": 0.96
+  },
+  "baseline/UniformRandom": {
+   "cpu": 141.04877186201574,
+   "tp": 19.88,
+   "joint": 0.9
+  },
+  "cost-episode/seed_123/argmax": {
+   "cpu": 155.33701282942204,
+   "tp": 17.56,
+   "joint": 0.5
+  },
+  "cost-episode/seed_123/stoch": {
+   "cpu": 141.66554859285895,
+   "tp": 20.12,
+   "joint": 0.98
+  },
+  "cost-episode/seed_2024/argmax": {
+   "cpu": 142.6859405338212,
+   "tp": 19.78,
+   "joint": 0.9
+  },
+  "cost-episode/seed_2024/stoch": {
+   "cpu": 140.6494567896287,
+   "tp": 20.14,
+   "joint": 0.96
+  },
+  "cost-episode/seed_42/argmax": {
+   "cpu": 230.05045901990164,
+   "tp": 12.06,
+   "joint": 0.0
+  },
+  "cost-episode/seed_42/stoch": {
+   "cpu": 140.35469768035918,
+   "tp": 20.16,
+   "joint": 0.92
+  },
+  "cost-episode/seed_7/argmax": {
+   "cpu": 135.3499175602845,
+   "tp": 20.42,
+   "joint": 0.98
+  },
+  "cost-episode/seed_7/stoch": {
+   "cpu": 141.28761819026755,
+   "tp": 20.4,
+   "joint": 0.94
+  },
+  "cost-episode/seed_999/argmax": {
+   "cpu": 164.86793162723927,
+   "tp": 16.78,
+   "joint": 0.34
+  },
+  "cost-episode/seed_999/stoch": {
+   "cpu": 141.3905734199435,
+   "tp": 20.02,
+   "joint": 0.92
+  },
+  "shaped-cumrate/seed_123/argmax": {
+   "cpu": 180.0777529800007,
+   "tp": 15.02,
+   "joint": 0.08
+  },
+  "shaped-cumrate/seed_123/stoch": {
+   "cpu": 137.5695348992657,
+   "tp": 20.08,
+   "joint": 0.82
+  },
+  "shaped-cumrate/seed_2024/argmax": {
+   "cpu": 155.25568589242712,
+   "tp": 17.78,
+   "joint": 0.52
+  },
+  "shaped-cumrate/seed_2024/stoch": {
+   "cpu": 142.03220728028123,
+   "tp": 20.04,
+   "joint": 0.9
+  },
+  "shaped-cumrate/seed_42/argmax": {
+   "cpu": 213.63234753024753,
+   "tp": 11.94,
+   "joint": 0.0
+  },
+  "shaped-cumrate/seed_42/stoch": {
+   "cpu": 139.06048723969303,
+   "tp": 20.04,
+   "joint": 0.8
+  },
+  "shaped-cumrate/seed_7/argmax": {
+   "cpu": 211.92428367596455,
+   "tp": 13.2,
+   "joint": 0.02
+  },
+  "shaped-cumrate/seed_7/stoch": {
+   "cpu": 139.23070646845937,
+   "tp": 20.24,
+   "joint": 0.96
+  },
+  "shaped-cumrate/seed_999/argmax": {
+   "cpu": 140.98383790581624,
+   "tp": 18.72,
+   "joint": 0.04
+  },
+  "shaped-cumrate/seed_999/stoch": {
+   "cpu": 140.16122217374988,
+   "tp": 19.92,
+   "joint": 0.84
+  },
+  "cost-episode/stoch/pooled_cpu": 141.06957893461157,
+  "cost-episode/stoch/pooled_joint": 0.944,
+  "cost-episode/argmax/pooled_cpu": 165.65825231413373,
+  "cost-episode/argmax/pooled_joint": 0.544,
+  "shaped-cumrate/stoch/pooled_cpu": 139.61083161228984,
+  "shaped-cumrate/stoch/pooled_joint": 0.864,
+  "shaped-cumrate/argmax/pooled_cpu": 180.37478159689124,
+  "shaped-cumrate/argmax/pooled_joint": 0.132
+ },
+ "bootstrap": {
+  "cost-episode/stoch/cpu vs ShortestQueue": {
+   "diff": 2.406604134141986,
+   "ci": [
+    -1.6917557707677784,
+    6.545096859258678
+   ],
+   "p": 0.2498,
+   "holm_threshold": 0.008333333333333333,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/cpu vs RoundRobin": {
+   "diff": 3.523704897246404,
+   "ci": [
+    -1.0180499062167185,
+    8.062710139659139
+   ],
+   "p": 0.125,
+   "holm_threshold": 0.00625,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/cpu vs UniformRandom": {
+   "diff": 0.020807072595829368,
+   "ci": [
+    -3.926463974222643,
+    3.88163153401034
+   ],
+   "p": 0.9856,
+   "holm_threshold": 0.05,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/cpu vs LeastUtilised": {
+   "diff": -4.561951865056756,
+   "ci": [
+    -9.451854808894485,
+    0.5026013889611753
+   ],
+   "p": 0.0786,
+   "holm_threshold": 0.005555555555555556,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/joint vs ShortestQueue": {
+   "diff": -0.016000000000000014,
+   "ci": [
+    -0.07599999999999996,
+    0.051999999999999935
+   ],
+   "p": 0.6376,
+   "holm_threshold": 0.025,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/joint vs RoundRobin": {
+   "diff": 0.06399999999999995,
+   "ci": [
+    -0.02400000000000002,
+    0.16399999999999992
+   ],
+   "p": 0.1814,
+   "holm_threshold": 0.0071428571428571435,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/joint vs UniformRandom": {
+   "diff": 0.04399999999999993,
+   "ci": [
+    -0.040000000000000036,
+    0.14
+   ],
+   "p": 0.348,
+   "holm_threshold": 0.01,
+   "holm_significant": false
+  },
+  "cost-episode/stoch/joint vs LeastUtilised": {
+   "diff": 0.04399999999999993,
+   "ci": [
+    -0.051999999999999935,
+    0.14800000000000002
+   ],
+   "p": 0.403,
+   "holm_threshold": 0.016666666666666666,
+   "holm_significant": false
+  },
+  "cost-episode/argmax/cpu vs ShortestQueue": {
+   "diff": 26.99527751366415,
+   "ci": [
+    2.7084246253259985,
+    61.10987039397046
+   ],
+   "p": 0.0164
+  },
+  "cost-episode/argmax/cpu vs RoundRobin": {
+   "diff": 28.112378276768567,
+   "ci": [
+    4.150730698347774,
+    62.3786848076988
+   ],
+   "p": 0.007
+  },
+  "cost-episode/argmax/cpu vs UniformRandom": {
+   "diff": 24.609480452117992,
+   "ci": [
+    0.4332156698401429,
+    58.74774549674495
+   ],
+   "p": 0.0404
+  },
+  "cost-episode/argmax/cpu vs LeastUtilised": {
+   "diff": 20.026721514465407,
+   "ci": [
+    -4.037195055564016,
+    53.4901611065703
+   ],
+   "p": 0.1608
+  },
+  "cost-episode/argmax/joint vs ShortestQueue": {
+   "diff": -0.4159999999999999,
+   "ci": [
+    -0.74,
+    -0.09999999999999998
+   ],
+   "p": 0.0074
+  },
+  "cost-episode/argmax/joint vs RoundRobin": {
+   "diff": -0.33599999999999997,
+   "ci": [
+    -0.6679999999999999,
+    -0.01200000000000001
+   ],
+   "p": 0.0412
+  },
+  "cost-episode/argmax/joint vs UniformRandom": {
+   "diff": -0.356,
+   "ci": [
+    -0.692,
+    -0.03600000000000003
+   ],
+   "p": 0.03
+  },
+  "cost-episode/argmax/joint vs LeastUtilised": {
+   "diff": -0.356,
+   "ci": [
+    -0.6799999999999999,
+    -0.028000000000000025
+   ],
+   "p": 0.0314
+  },
+  "shaped-cumrate/stoch/cpu vs ShortestQueue": {
+   "diff": 0.9478568118202588,
+   "ci": [
+    -3.3222816284898014,
+    5.10949055252725
+   ],
+   "p": 0.6596
+  },
+  "shaped-cumrate/stoch/cpu vs RoundRobin": {
+   "diff": 2.0649575749246765,
+   "ci": [
+    -2.692993752131013,
+    6.929466923596655
+   ],
+   "p": 0.3982
+  },
+  "shaped-cumrate/stoch/cpu vs UniformRandom": {
+   "diff": -1.437940249725898,
+   "ci": [
+    -5.99315381494679,
+    2.9946832960606655
+   ],
+   "p": 0.5492
+  },
+  "shaped-cumrate/stoch/cpu vs LeastUtilised": {
+   "diff": -6.020699187378483,
+   "ci": [
+    -10.85772868955868,
+    -1.0066443300258994
+   ],
+   "p": 0.0202
+  },
+  "shaped-cumrate/stoch/joint vs ShortestQueue": {
+   "diff": -0.09599999999999997,
+   "ci": [
+    -0.18399999999999994,
+    -0.016000000000000014
+   ],
+   "p": 0.0156
+  },
+  "shaped-cumrate/stoch/joint vs RoundRobin": {
+   "diff": -0.016000000000000014,
+   "ci": [
+    -0.124,
+    0.09599999999999997
+   ],
+   "p": 0.7814
+  },
+  "shaped-cumrate/stoch/joint vs UniformRandom": {
+   "diff": -0.03600000000000003,
+   "ci": [
+    -0.14,
+    0.06800000000000006
+   ],
+   "p": 0.5208
+  },
+  "shaped-cumrate/stoch/joint vs LeastUtilised": {
+   "diff": -0.03600000000000003,
+   "ci": [
+    -0.15600000000000003,
+    0.08399999999999996
+   ],
+   "p": 0.5872
+  },
+  "shaped-cumrate/argmax/cpu vs ShortestQueue": {
+   "diff": 41.711806796421655,
+   "ci": [
+    15.806807327468919,
+    67.18428484278704
+   ],
+   "p": 0.0002
+  },
+  "shaped-cumrate/argmax/cpu vs RoundRobin": {
+   "diff": 42.82890755952607,
+   "ci": [
+    17.241438823923094,
+    69.52533179226248
+   ],
+   "p": 0.0002
+  },
+  "shaped-cumrate/argmax/cpu vs UniformRandom": {
+   "diff": 39.3260097348755,
+   "ci": [
+    12.797956708782634,
+    65.75431108883832
+   ],
+   "p": 0.0004
+  },
+  "shaped-cumrate/argmax/cpu vs LeastUtilised": {
+   "diff": 34.74325079722291,
+   "ci": [
+    8.463946878479238,
+    61.194101717546374
+   ],
+   "p": 0.0076
+  },
+  "shaped-cumrate/argmax/joint vs ShortestQueue": {
+   "diff": -0.828,
+   "ci": [
+    -0.972,
+    -0.616
+   ],
+   "p": 0.0
+  },
+  "shaped-cumrate/argmax/joint vs RoundRobin": {
+   "diff": -0.748,
+   "ci": [
+    -0.9159999999999999,
+    -0.524
+   ],
+   "p": 0.0
+  },
+  "shaped-cumrate/argmax/joint vs UniformRandom": {
+   "diff": -0.768,
+   "ci": [
+    -0.9319999999999999,
+    -0.544
+   ],
+   "p": 0.0
+  },
+  "shaped-cumrate/argmax/joint vs LeastUtilised": {
+   "diff": -0.768,
+   "ci": [
+    -0.9319999999999999,
+    -0.548
+   ],
+   "p": 0.0
+  },
+  "cost-episode vs shaped-cumrate/stoch/cpu": {
+   "diff": 1.4587473223217273,
+   "ci": [
+    -1.7867223887513217,
+    4.77565722635336
+   ],
+   "p": 0.3766,
+   "holm_threshold": 0.0125,
+   "holm_significant": false
+  },
+  "cost-episode vs shaped-cumrate/stoch/joint": {
+   "diff": 0.07999999999999996,
+   "ci": [
+    0.0,
+    0.17199999999999993
+   ],
+   "p": 0.0626,
+   "holm_threshold": 0.005,
+   "holm_significant": false
+  },
+  "cost-episode vs shaped-cumrate/argmax/cpu": {
+   "diff": -14.716529282757506,
+   "ci": [
+    -51.998547665662485,
+    26.624326885283743
+   ],
+   "p": 0.4578
+  },
+  "cost-episode vs shaped-cumrate/argmax/joint": {
+   "diff": 0.41200000000000003,
+   "ci": [
+    0.039900000000000074,
+    0.768
+   ],
+   "p": 0.0284
+  }
+ },
+ "severity": {
+  "T17_U0.4": {
+   "ShortestQueue": 1.0,
+   "LeastUtilised": 1.0,
+   "RoundRobin": 0.98,
+   "UniformRandom": 0.98,
+   "cost-episode/stoch": 0.9879999999999999,
+   "shaped-cumrate/stoch": 0.96
+  },
+  "T17_U0.5": {
+   "ShortestQueue": 1.0,
+   "LeastUtilised": 1.0,
+   "RoundRobin": 0.92,
+   "UniformRandom": 0.96,
+   "cost-episode/stoch": 0.984,
+   "shaped-cumrate/stoch": 0.908
+  },
+  "T17_U0.6": {
+   "ShortestQueue": 1.0,
+   "LeastUtilised": 1.0,
+   "RoundRobin": 0.8,
+   "UniformRandom": 0.88,
+   "cost-episode/stoch": 0.968,
+   "shaped-cumrate/stoch": 0.776
+  },
+  "T17_U0.7": {
+   "ShortestQueue": 0.92,
+   "LeastUtilised": 0.98,
+   "RoundRobin": 0.46,
+   "UniformRandom": 0.56,
+   "cost-episode/stoch": 0.876,
+   "shaped-cumrate/stoch": 0.58
+  },
+  "T17_U0.8": {
+   "ShortestQueue": 0.7,
+   "LeastUtilised": 0.82,
+   "RoundRobin": 0.2,
+   "UniformRandom": 0.36,
+   "cost-episode/stoch": 0.688,
+   "shaped-cumrate/stoch": 0.33599999999999997
+  },
+  "T18_U0.4": {
+   "ShortestQueue": 0.96,
+   "LeastUtilised": 0.9,
+   "RoundRobin": 0.94,
+   "UniformRandom": 0.92,
+   "cost-episode/stoch": 0.944,
+   "shaped-cumrate/stoch": 0.9
+  },
+  "T18_U0.5": {
+   "ShortestQueue": 0.96,
+   "LeastUtilised": 0.9,
+   "RoundRobin": 0.88,
+   "UniformRandom": 0.9,
+   "cost-episode/stoch": 0.944,
+   "shaped-cumrate/stoch": 0.8640000000000001
+  },
+  "T18_U0.6": {
+   "ShortestQueue": 0.96,
+   "LeastUtilised": 0.9,
+   "RoundRobin": 0.76,
+   "UniformRandom": 0.84,
+   "cost-episode/stoch": 0.9279999999999999,
+   "shaped-cumrate/stoch": 0.736
+  },
+  "T18_U0.7": {
+   "ShortestQueue": 0.88,
+   "LeastUtilised": 0.88,
+   "RoundRobin": 0.44,
+   "UniformRandom": 0.54,
+   "cost-episode/stoch": 0.836,
+   "shaped-cumrate/stoch": 0.548
+  },
+  "T18_U0.8": {
+   "ShortestQueue": 0.68,
+   "LeastUtilised": 0.74,
+   "RoundRobin": 0.2,
+   "UniformRandom": 0.36,
+   "cost-episode/stoch": 0.6679999999999999,
+   "shaped-cumrate/stoch": 0.33599999999999997
+  },
+  "T19_U0.4": {
+   "ShortestQueue": 0.86,
+   "LeastUtilised": 0.72,
+   "RoundRobin": 0.82,
+   "UniformRandom": 0.84,
+   "cost-episode/stoch": 0.8480000000000001,
+   "shaped-cumrate/stoch": 0.772
+  },
+  "T19_U0.5": {
+   "ShortestQueue": 0.86,
+   "LeastUtilised": 0.72,
+   "RoundRobin": 0.78,
+   "UniformRandom": 0.82,
+   "cost-episode/stoch": 0.8480000000000001,
+   "shaped-cumrate/stoch": 0.748
+  },
+  "T19_U0.6": {
+   "ShortestQueue": 0.86,
+   "LeastUtilised": 0.72,
+   "RoundRobin": 0.68,
+   "UniformRandom": 0.76,
+   "cost-episode/stoch": 0.836,
+   "shaped-cumrate/stoch": 0.636
+  },
+  "T19_U0.7": {
+   "ShortestQueue": 0.78,
+   "LeastUtilised": 0.72,
+   "RoundRobin": 0.38,
+   "UniformRandom": 0.46,
+   "cost-episode/stoch": 0.7559999999999999,
+   "shaped-cumrate/stoch": 0.4880000000000001
+  },
+  "T19_U0.8": {
+   "ShortestQueue": 0.62,
+   "LeastUtilised": 0.6,
+   "RoundRobin": 0.18,
+   "UniformRandom": 0.3,
+   "cost-episode/stoch": 0.604,
+   "shaped-cumrate/stoch": 0.316
+  },
+  "T20_U0.4": {
+   "ShortestQueue": 0.68,
+   "LeastUtilised": 0.46,
+   "RoundRobin": 0.64,
+   "UniformRandom": 0.62,
+   "cost-episode/stoch": 0.636,
+   "shaped-cumrate/stoch": 0.5880000000000001
+  },
+  "T20_U0.5": {
+   "ShortestQueue": 0.68,
+   "LeastUtilised": 0.46,
+   "RoundRobin": 0.6,
+   "UniformRandom": 0.6,
+   "cost-episode/stoch": 0.636,
+   "shaped-cumrate/stoch": 0.5800000000000001
+  },
+  "T20_U0.6": {
+   "ShortestQueue": 0.68,
+   "LeastUtilised": 0.46,
+   "RoundRobin": 0.52,
+   "UniformRandom": 0.58,
+   "cost-episode/stoch": 0.624,
+   "shaped-cumrate/stoch": 0.5
+  },
+  "T20_U0.7": {
+   "ShortestQueue": 0.62,
+   "LeastUtilised": 0.46,
+   "RoundRobin": 0.22,
+   "UniformRandom": 0.34,
+   "cost-episode/stoch": 0.5720000000000001,
+   "shaped-cumrate/stoch": 0.396
+  },
+  "T20_U0.8": {
+   "ShortestQueue": 0.48,
+   "LeastUtilised": 0.42,
+   "RoundRobin": 0.1,
+   "UniformRandom": 0.18,
+   "cost-episode/stoch": 0.45199999999999996,
+   "shaped-cumrate/stoch": 0.264
+  },
+  "T21_U0.4": {
+   "ShortestQueue": 0.44,
+   "LeastUtilised": 0.32,
+   "RoundRobin": 0.48,
+   "UniformRandom": 0.32,
+   "cost-episode/stoch": 0.39999999999999997,
+   "shaped-cumrate/stoch": 0.41200000000000003
+  },
+  "T21_U0.5": {
+   "ShortestQueue": 0.44,
+   "LeastUtilised": 0.32,
+   "RoundRobin": 0.46,
+   "UniformRandom": 0.32,
+   "cost-episode/stoch": 0.39999999999999997,
+   "shaped-cumrate/stoch": 0.40800000000000003
+  },
+  "T21_U0.6": {
+   "ShortestQueue": 0.44,
+   "LeastUtilised": 0.32,
+   "RoundRobin": 0.42,
+   "UniformRandom": 0.3,
+   "cost-episode/stoch": 0.39999999999999997,
+   "shaped-cumrate/stoch": 0.356
+  },
+  "T21_U0.7": {
+   "ShortestQueue": 0.44,
+   "LeastUtilised": 0.32,
+   "RoundRobin": 0.16,
+   "UniformRandom": 0.22,
+   "cost-episode/stoch": 0.364,
+   "shaped-cumrate/stoch": 0.29200000000000004
+  },
+  "T21_U0.8": {
+   "ShortestQueue": 0.34,
+   "LeastUtilised": 0.3,
+   "RoundRobin": 0.06,
+   "UniformRandom": 0.12,
+   "cost-episode/stoch": 0.304,
+   "shaped-cumrate/stoch": 0.20800000000000002
+  },
+  "T22_U0.4": {
+   "ShortestQueue": 0.26,
+   "LeastUtilised": 0.14,
+   "RoundRobin": 0.34,
+   "UniformRandom": 0.16,
+   "cost-episode/stoch": 0.2,
+   "shaped-cumrate/stoch": 0.21600000000000003
+  },
+  "T22_U0.5": {
+   "ShortestQueue": 0.26,
+   "LeastUtilised": 0.14,
+   "RoundRobin": 0.32,
+   "UniformRandom": 0.16,
+   "cost-episode/stoch": 0.2,
+   "shaped-cumrate/stoch": 0.21200000000000002
+  },
+  "T22_U0.6": {
+   "ShortestQueue": 0.26,
+   "LeastUtilised": 0.14,
+   "RoundRobin": 0.3,
+   "UniformRandom": 0.14,
+   "cost-episode/stoch": 0.2,
+   "shaped-cumrate/stoch": 0.18
+  },
+  "T22_U0.7": {
+   "ShortestQueue": 0.26,
+   "LeastUtilised": 0.14,
+   "RoundRobin": 0.12,
+   "UniformRandom": 0.12,
+   "cost-episode/stoch": 0.184,
+   "shaped-cumrate/stoch": 0.156
+  },
+  "T22_U0.8": {
+   "ShortestQueue": 0.2,
+   "LeastUtilised": 0.14,
+   "RoundRobin": 0.04,
+   "UniformRandom": 0.06,
+   "cost-episode/stoch": 0.16,
+   "shaped-cumrate/stoch": 0.124
+  }
+ },
+ "holm_family_size": 10
+}
