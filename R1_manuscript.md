@@ -19,14 +19,14 @@ original verdict without retraining. A
 corrected formulation at the full pre-registered budget satisfies the validation
 criterion on every seed, at $78.10 ± 1.64 per unit against $73.25 for
 ShortestQueue, but learns near-uniform routers indistinguishable from
-round-robin routing on cost-per-unit, because the constraint terms outweigh the
-cost term by two to four orders of magnitude and the one-sided update cannot
-release them. A pre-registered cell with a symmetric update and multipliers on
-the scale of the reward produces a working Lagrangian and a state-dependent
-policy that minimises total cost at the throughput floor, as the stated problem
-asks, and is therefore worse per unit than random routing and infeasible on a
-quarter of episodes: total cost is nearly flat in routing while cost-per-unit
-falls with throughput. Constrained PPO did not fail to satisfy its constraints
+round-robin routing on cost-per-unit, because under the one-sided update the
+constraint terms outweigh the cost term by two to four orders of magnitude and
+cannot be released. A further cell, specified prospectively before its runs, with a
+symmetric update and multipliers on the scale of the reward, produces a working
+Lagrangian and a state-dependent policy driven toward the throughput floor by
+the total-cost objective, as the stated problem asks; it is therefore worse per
+unit than random routing and infeasible on a quarter of episodes, because total
+cost is nearly flat in routing while cost-per-unit falls with throughput. Constrained PPO did not fail to satisfy its constraints
 here; it failed to learn a cost-efficient state-aware routing policy, and the
 reason lies in the gap between the objective posed and the metric reported. All
 code and results are open source.
@@ -103,9 +103,9 @@ stochastic evaluation, with uncertainty in both the learned policies and the
 baselines propagated by a paired hierarchical bootstrap, the corrected
 constrained agent is indistinguishable on cost-per-unit. Its cost-per-unit is
 6.6% above ShortestQueue, a state-aware rule that requires no training. The
-audit that follows explains why. In every configuration studied, including the
-corrected one, the constraint terms of the augmented objective outweigh the cost
-term by two to four orders of magnitude, because the multipliers were
+audit that follows explains why. In the original and the corrected one-sided
+configurations alike, the constraint terms of the augmented objective outweigh
+the cost term by two to four orders of magnitude, because the multipliers were
 initialised in units inherited from the per-step signal and a one-sided dual
 update can never release them once the constraints are slack. The agent was, in
 effect, trained to maximise throughput and fast-server utilisation, which it did
@@ -113,12 +113,13 @@ by tilting a near-uniform router toward the fast servers. The method did not
 fail to satisfy its constraints; stateless load-balancing satisfies them too. It
 failed to learn a cost-efficient, state-aware routing policy competitive with a
 two-line dispatching rule, and under the objective it was actually given it had
-little reason to. A final pre-registered cell gives it that reason, with a
-symmetric dual update and multipliers on the scale of the reward. The dual then
-works, the policy becomes state-dependent, and it minimises total cost at the
-throughput floor as the stated CMDP asks, which makes it worse on
-cost-per-unit than stateless routing and leaves a quarter of episodes
-infeasible under the protocol's per-episode criterion. The reason is measurable
+little reason to. A final cell, specified prospectively in a protocol amendment
+before its runs, gives it that reason, with a symmetric dual update and
+multipliers on the scale of the reward. The dual then works, the policy becomes
+state-dependent, and it is driven toward the throughput floor by the total-cost
+objective as the stated CMDP directs, which makes it worse on cost-per-unit
+than stateless routing and leaves a quarter of episodes infeasible under the
+protocol's per-episode criterion. The reason is measurable
 across every policy in the study: total episode cost is nearly flat in routing,
 throughput is not, and the objective posed is therefore not the metric
 reported.
@@ -802,10 +803,11 @@ magnitude above the scale of the cost term. The comparison of returns, if
 anything, understates the imbalance seen by the policy gradient: the cost term
 of Eq. (1) differs between the routing actions available at a decision by about
 10⁻³ per step, whereas a single departure moves the per-step term of Eq. (6) by
-λ_T, between 200 and 7,858. In every configuration of this study, therefore,
-the objective the agent actually optimised was, to within a fraction of a
-percent, throughput and fast-server utilisation, and the cost term of Eq. (2)
-was numerically irrelevant.
+λ_T, between 200 and 7,858. In every one-sided configuration of this study,
+therefore, the original and the corrected alike, the objective the agent
+actually optimised was, to within a fraction of a percent, throughput and
+fast-server utilisation, and the cost term of Eq. (2) was numerically
+irrelevant.
 
 This is the reason the corrected agent could not be expected to learn
 cost-efficient routing, and it is independent of the two artefacts. It follows
@@ -985,7 +987,8 @@ are consequently on the scale of the cost term throughout: 7–14% of the return
 at the training-mean multipliers and 0.6–1.5 times the return at the
 multipliers' peaks, against 190–10,000 times in the corrected cell.
 
-The policy responds as a total-cost minimiser should. Within the first 400K
+The policy responds in the direction the total-cost objective pushes it.
+Within the first 400K
 steps mean throughput per training episode falls from the level of random
 routing, 4.4 units above T_min, to 1–3 units above it, and stays there for the
 rest of training (Figure 2b); 24–39% of training episodes fall below T_min in
@@ -1035,10 +1038,12 @@ logit noise of 0.1 now moves the greedy action at 10% of states rather than 25%.
 
 The outcome is the second of the three the amendment listed. A functioning dual
 on the stated CMDP does not produce a policy competitive with ShortestQueue on
-either metric; it produces a state-dependent, randomised total-cost minimiser
-that sits at the throughput floor, satisfies the expectation constraint, fails
-the per-episode criterion on a quarter of episodes, and costs more per unit than
-stateless routing. The failure to learn cost-efficient routing in the corrected
+either metric; it produces a state-dependent, randomised policy that the
+total-cost objective drives to the throughput floor, which satisfies the
+expectation constraint, fails the per-episode criterion on a quarter of
+episodes, and costs more per unit than stateless routing. Whether it is close
+to the total-cost optimum we cannot say; its total cost is not below that of
+stateless routing, so the objective was pursued but not demonstrably solved. The failure to learn cost-efficient routing in the corrected
 cell was attributable to the multiplier scale in one respect only: with the
 constraint terms on the reward scale, PPO does move away from the uniform
 policy. Where it moves is governed by the objective it was given, and that
@@ -1102,27 +1107,30 @@ direction.
 of the reward and free to fall, PPO does leave the uniform policy: the
 symmetric cell's action distributions are concentrated and state-dependent, and
 its argmax is a coherent conservative router rather than an arbitrary one. What
-it learns is a total-cost minimiser at the throughput floor, which is what the
-CMDP of Eq. (2) asks for, and that policy is worse on cost-per-unit than
-stateless routing and satisfies the per-episode criterion on only three
-quarters of episodes. The mechanism is the one §3.4 anticipated from two data
+it learns is a policy driven toward the throughput floor by the total-cost
+objective, which is the direction the CMDP of Eq. (2) points, and that policy
+is worse on cost-per-unit than stateless routing and satisfies the per-episode
+criterion on only three quarters of episodes. The mechanism is the one §3.4 anticipated from two data
 points and §6.7 measures across every policy in the study: total episode cost
 is nearly flat in routing, throughput is not, and cost-per-unit therefore falls
-with throughput across the whole operating range. A total-cost minimiser has no
-reason to buy throughput above the floor, so a working Lagrangian moves the
-policy away from the region where cost-per-unit is lowest, and the chance
+with throughput across the whole operating range. An agent minimising total
+cost has no reason to buy throughput above the floor, so a working Lagrangian
+moves the policy away from the region where cost-per-unit is lowest, and the chance
 constraint that the protocol actually checks is stricter than the expectation
 constraint the Lagrangian actually enforces. The phrase "failed to learn"
 therefore needs two qualifications. Constrained PPO failed to learn a
 cost-efficient, state-aware routing policy competitive with ShortestQueue. In
 the hinged cells it was never seriously asked to, because cost had negligible
 weight in the objective; in the symmetric cell it was asked to minimise a
-quantity that is not the metric, and did so.
+quantity that is not the metric, and moved in that direction.
 
 Three consequences follow for anyone posing this problem to a constrained
-learner. The objective must be the metric: a ratio objective (§3.4), or a
-throughput term with a weight set by the reported cost-per-unit rather than by
-a constraint, is not optional here. The constraint must be the one the protocol
+learner. If cost-per-unit is the criterion by which routing performance is
+judged, the learning objective should be aligned with it: a ratio objective
+(§3.4), or a throughput term whose weight is set by the reported cost-per-unit
+rather than by a constraint. A CMDP that minimises total cost is a legitimate
+formulation; it should then be judged on total cost, and here it was not. The
+constraint must be the one the protocol
 checks: a per-episode chance constraint needs a per-episode formulation, for
 instance a penalty on the indicator of violation or a conditional-value-at-risk
 constraint, rather than an expectation constraint whose satisfaction with a
@@ -1133,8 +1141,9 @@ the practical recommendation of the original submission stands, for a
 different reason. Tuned dispatching rules remain the baseline to beat on
 problems of this size and structure. The constrained agent no longer fails to
 satisfy its constraints; it satisfies them either the way a fast-server-biased
-random router does or the way a total-cost minimiser at the floor does, and in
-both cases it is more expensive per unit than a rule that looks at the queues.
+random router does or the way a policy held at the throughput floor by its
+objective does, and in both cases it is more expensive per unit than a rule
+that looks at the queues.
 
 ### 7.3 Deterministic deployment
 
@@ -1227,9 +1236,11 @@ justification. The attribution should be treated as established at 400K only.
 the exact Lagrangian of Eq. (2) at multiplier values that never approach their
 equilibrium, so its results characterise a hinged, heavily weighted Lagrangian.
 The symmetric cell of §6.7 tests constrained PPO with a functioning dual, but in
-one configuration only: multiplier scales fixed a priori by Amendment R2, plain
-dual ascent without PID damping or averaging, the original entropy coefficient,
-and electronics only. Its λ_T oscillates rather than converging (Figure 2a), and
+one configuration only: multiplier scales fixed by Amendment R2 before its runs
+but after the results of §6.1–6.6 had been inspected, so the cell is prospective
+rather than pre-registered in the sense of the original protocol; plain dual
+ascent without PID damping or averaging; the original entropy coefficient; and
+electronics only. Its λ_T oscillates rather than converging (Figure 2a), and
 a damped or averaged dual, or a different step size, might select different
 checkpoints. We regard the mechanism it exposes, a total-cost objective that is
 flat in routing and indifferent to throughput above the floor, as robust to
@@ -1256,9 +1267,9 @@ its constraints on every seed of both testbeds. It does so, however, in the way
 that a fast-server-biased random router satisfies them: the learned policies
 are near-uniform, indistinguishable from round-robin on cost-per-unit under a
 paired bootstrap, and 6.6% more expensive than ShortestQueue on the harder
-testbed. The audit also shows why. In every configuration studied the
-constraint terms outweighed the cost term by two to four orders of magnitude and
-the one-sided dual update could not release them, so the agent was in effect
+testbed. The audit also shows why. In the original and the corrected one-sided
+configurations the constraint terms outweighed the cost term by two to four
+orders of magnitude and the dual update could not release them, so the agent was in effect
 trained to maximise throughput and fast-server utilisation, and cost-efficient
 routing was never effectively part of its objective. The corrected negative
 result is narrower than the original and, we think, more useful. The method did
@@ -1266,8 +1277,8 @@ not fail to meet its constraints; it failed to learn a cost-efficient
 state-aware routing policy, under an objective that gave it little reason to.
 Giving it that reason, with a symmetric dual update and multipliers on the scale
 of the reward, produced a working Lagrangian and a different policy: a
-state-dependent, randomised total-cost minimiser at the throughput floor, which
-satisfies the expectation constraint it was given, fails the per-episode
+state-dependent, randomised policy driven to the throughput floor by the
+total-cost objective, which satisfies the expectation constraint it was given, fails the per-episode
 criterion the protocol checks on a quarter of episodes, and is more expensive
 per unit than stateless routing, because total cost is nearly flat in routing
 while cost-per-unit falls with throughput. Neither the artefacts nor their
