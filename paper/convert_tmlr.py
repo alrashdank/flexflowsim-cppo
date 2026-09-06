@@ -14,6 +14,15 @@ genai=s.split("## Declaration of generative AI use")[1].split("## CRediT")[0]
 appx=s.split("## Appendix A. Reproducibility")[1]
 appx="## Appendix A. Reproducibility"+appx
 body=body.replace("r̃_t","$\\tilde r_t$")
+import sys as _sys
+_MODE=_sys.argv[1] if len(_sys.argv)>1 else "submission"
+if _MODE=="submission":
+    for _n in ("body","abstract","data_avail","appx"):
+        _v=globals()[_n]
+        _v=_v.replace("Alrashdan (2026)","Author (2026c)").replace("(Alrashdan, 2026)","(Author, 2026c)")
+        globals()[_n]=_v
+    abstract=re.sub(r"All\s+code and results are\s+open source\.","Code and results are provided as anonymised supplementary material and will be released openly with the de-anonymised version.",abstract)
+    data_avail=data_avail.replace("available at [URL withheld for review].","available at [URL withheld for review]; an anonymised snapshot is provided as\nsupplementary material.")
 # ---- inline mathematics in running text (outside $...$ and code spans)
 PHRASES=[("P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8","$P(\\mathrm{TP}(\\tau) \\ge T_{\\min}) \\ge 0.8$ and $P(\\min_i u_i(\\tau) \\ge U_{\\min}) \\ge 0.8$"),
 ("E[C(τ)/TP(τ)]","$\\mathbb{E}[C(\\tau)/\\mathrm{TP}(\\tau)]$"),
@@ -45,7 +54,7 @@ def mathify(md):
 body=mathify(body); abstract=mathify(abstract); appx=mathify(appx)
 # ---- citations -> natbib
 CIT={"Achiam et al., 2017":"achiam2017cpo","Agarwal et al., 2021":"agarwal2021precipice","Ali & Tirel, 2023":"ali2023masked",
-"Altman, 1999":"altman1999cmdp","Alrashdan, 2026":"alrashdan2026breakdowns","Author, 2026a":"author2026a","Author, 2026b":"author2026b","Babor & Hitzmann, 2022":"babor2022bakery",
+"Altman, 1999":"altman1999cmdp","Alrashdan, 2026":"alrashdan2026breakdowns","Author, 2026c":"author2026c","Author, 2026a":"author2026a","Author, 2026b":"author2026b","Babor & Hitzmann, 2022":"babor2022bakery",
 "Doherty et al., 2025":"doherty2025hype","Ferreira et al., 2022":"ferreira2022dispatching","Henderson et al., 2018":"henderson2018matters",
 "Huang et al., 2025":"huang2025evolving","Li et al., 2025":"li2025evolutionary","Liu et al., 2025":"liu2025gat","Marques et al., 2025":"marques2025dynamic",
 "Mayerhoff & Schmidt, 2026":"mayerhoff2026slr","Paternain et al., 2019":"paternain2019duality","Raffin et al., 2021":"raffin2021sb3",
@@ -56,7 +65,7 @@ def norm(t): return re.sub(r"\s+"," ",t)
 def cite_paren(m):
     inner=norm(m.group(1))
     pre=""
-    if ";" in inner and not re.match(r"^[A-Z][\w\-]+(?: (?:&|and) [A-Z][\w\-]+| et al\.)?, (?:19|20)\d\d[ab]?",inner.split(";")[0].strip()):
+    if ";" in inner and not re.match(r"^[A-Z][\w\-]+(?: (?:&|and) [A-Z][\w\-]+| et al\.)?, (?:19|20)\d\d[a-c]?",inner.split(";")[0].strip()):
         pre,inner=inner.split(";",1); pre=pre.strip(); inner=inner.strip()      # "(PPO; Schulman et al., 2017)"
     post=""
     parts=[p.strip() for p in inner.split(";")]
@@ -69,16 +78,16 @@ def cite_paren(m):
     if pre: return f"({pre}; \\citealp{{{','.join(keys)}}})"
     if post: return f"\\citep[][{post}]{{{','.join(keys)}}}"
     return f"\\citep{{{','.join(keys)}}}"
-body=re.sub(r"\(([^()]*?\b(?:19|20)\d\d[ab]?[^()]*?)\)",cite_paren,body)
+body=re.sub(r"\(([^()]*?\b(?:19|20)\d\d[a-c]?[^()]*?)\)",cite_paren,body)
 def cite_text(m):
     name=norm(m.group(1)).replace(" and ","& ").replace("& ","& "); key=CIT.get(f"{name}, {m.group(2)}".replace("& ","& "))
     if key is None:
         key=CIT.get(f"{norm(m.group(1)).replace(' and ',' & ')}, {m.group(2)}")
     return f"\\citet{{{key}}}" if key else m.group(0)
-body=re.sub(r"\b([A-Z][\w\-]+(?:\s(?:and|&)\s[A-Z][\w\-]+|\set al\.)?)\s\(((?:19|20)\d\d[ab]?)\)",cite_text,body)
+body=re.sub(r"\b([A-Z][\w\-]+(?:\s(?:and|&)\s[A-Z][\w\-]+|\set al\.)?)\s\(((?:19|20)\d\d[a-c]?)\)",cite_text,body)
 for _n in ("data_avail","appx"):
-    _v=globals()[_n]; _v=re.sub(r"\(([^()]*?\b(?:19|20)\d\d[ab]?[^()]*?)\)",cite_paren,_v)
-    _v=re.sub(r"\b([A-Z][\w\-]+(?:\s(?:and|&)\s[A-Z][\w\-]+|\set al\.)?)\s\(((?:19|20)\d\d[ab]?)\)",cite_text,_v); globals()[_n]=_v
+    _v=globals()[_n]; _v=re.sub(r"\(([^()]*?\b(?:19|20)\d\d[a-c]?[^()]*?)\)",cite_paren,_v)
+    _v=re.sub(r"\b([A-Z][\w\-]+(?:\s(?:and|&)\s[A-Z][\w\-]+|\set al\.)?)\s\(((?:19|20)\d\d[a-c]?)\)",cite_text,_v); globals()[_n]=_v
 assert "\\citet{rinciog2021fabricatio}" in body, "Rinciog"
 leftover=re.findall(r"\b(?:Altman|Schulman|Doherty|Agarwal|Henderson|Paternain|Stooke|Author) \(?(?:19|20)\d\d",body)
 print("unconverted narrative cites:",leftover)
