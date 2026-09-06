@@ -158,9 +158,16 @@ which does not apply in the fully feasible routing problem we study.
 Doherty et al. (2025) is the most directly relevant single paper on the
 benchmarking problem. They reproduce five landmark RL studies in optical resource
 allocation, apply properly tuned heuristic baselines, and find that simple
-heuristics consistently match or outperform the published RL results. Rinciog and
-Meyer (2021) introduced FabricatioRL, the closest comparator framework to our
-simulator. A parallel line bypasses RL entirely and learns interpretable
+heuristics consistently match or outperform the published RL results. On the
+two testbeds used here, Alrashdan (2026) benchmarked dispatching rules,
+Thompson-sampling bandits and unconstrained PPO under machine breakdowns of
+varying severity and found ShortestQueue ahead of PPO on cost-per-unit by
+38–153% depending on the disruption level, with a corrected training protocol
+(longer discount horizon, held-out checkpoint selection, a per-departure
+throughput bonus) narrowing the gap without closing it; that study did not
+consider constraints or evaluation mode, which are this paper's subject.
+Rinciog and Meyer (2021) introduced FabricatioRL, the closest comparator
+framework to our simulator. A parallel line bypasses RL entirely and learns interpretable
 dispatching rules via genetic programming or hyper-heuristics (Ferreira et al.,
 2022; Huang et al., 2025; Marques et al., 2025); we acknowledge it as an
 alternative but do not benchmark against it.
@@ -447,8 +454,9 @@ floor. Stage 1: Mounter A (fast, expensive) and Mounter B. Stage 2: Reflow 1
 (fast, structurally over-capacitated) and Manual Inspection (slow). F_fast =
 {Mounter A, Reflow 1}; the AOI Scanner is excluded because LeastUtilised itself
 reaches only 42% utilisation there and a 0.50 floor would be infeasible.
-T_min = 50. Service-time distributions and costs are in the FlexFlowSim-CPPO
-configuration files.
+T_min = 50. Both testbeds are those of the FlexFlowSim simulator described in
+Alrashdan (2026), without that study's breakdown extensions; service-time
+distributions and costs are in the FlexFlowSim-CPPO configuration files.
 
 ### 5.2 Baselines
 
@@ -1132,7 +1140,9 @@ Three consequences follow for anyone posing this problem to a constrained
 learner. If cost-per-unit is the criterion by which routing performance is
 judged, the learning objective should be aligned with it: a ratio objective
 (§3.4), or a throughput term whose weight is set by the reported cost-per-unit
-rather than by a constraint. A CMDP that minimises total cost is a legitimate
+rather than by a constraint; on these testbeds a per-departure bonus of that
+kind narrowed but did not close the gap to ShortestQueue for unconstrained PPO
+(Alrashdan, 2026). A CMDP that minimises total cost is a legitimate
 formulation; it should then be judged on total cost, and here it was not. The
 constraint must be the one the protocol
 checks: a per-episode chance constraint needs a per-episode formulation, for
@@ -1365,6 +1375,11 @@ Agarwal, R., Schwarzer, M., Castro, P. S., Courville, A., & Bellemare, M. G.
 Ali, A. M., & Tirel, L. (2023). Action Masked Deep Reinforcement Learning for
 Controlling Industrial Assembly Lines. *2023 IEEE World AI IoT Congress (AIIoT)*.
 https://doi.org/10.1109/AIIoT58121.2023.10174426
+
+Alrashdan, K. R. (2026). Routing Under Machine Breakdowns: A Benchmark of
+Dispatching Rules, Bandits, and Reinforcement Learning for Multi-Server Flow
+Shops. *Journal of King Saud University – Engineering Sciences*, 38, 55.
+https://doi.org/10.1007/s44444-026-00128-9
 
 Altman, E. (1999). *Constrained Markov Decision Processes*. Chapman & Hall/CRC.
 

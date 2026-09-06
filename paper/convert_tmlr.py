@@ -45,7 +45,7 @@ def mathify(md):
 body=mathify(body); abstract=mathify(abstract); appx=mathify(appx)
 # ---- citations -> natbib
 CIT={"Achiam et al., 2017":"achiam2017cpo","Agarwal et al., 2021":"agarwal2021precipice","Ali & Tirel, 2023":"ali2023masked",
-"Altman, 1999":"altman1999cmdp","Author, 2026a":"author2026a","Author, 2026b":"author2026b","Babor & Hitzmann, 2022":"babor2022bakery",
+"Altman, 1999":"altman1999cmdp","Alrashdan, 2026":"alrashdan2026breakdowns","Author, 2026a":"author2026a","Author, 2026b":"author2026b","Babor & Hitzmann, 2022":"babor2022bakery",
 "Doherty et al., 2025":"doherty2025hype","Ferreira et al., 2022":"ferreira2022dispatching","Henderson et al., 2018":"henderson2018matters",
 "Huang et al., 2025":"huang2025evolving","Li et al., 2025":"li2025evolutionary","Liu et al., 2025":"liu2025gat","Marques et al., 2025":"marques2025dynamic",
 "Mayerhoff & Schmidt, 2026":"mayerhoff2026slr","Paternain et al., 2019":"paternain2019duality","Raffin et al., 2021":"raffin2021sb3",
