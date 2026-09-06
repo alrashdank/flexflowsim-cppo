@@ -21,8 +21,8 @@ if _MODE=="submission":
         _v=globals()[_n]
         _v=_v.replace("Alrashdan (2026)","Author (2026c)").replace("(Alrashdan, 2026)","(Author, 2026c)")
         globals()[_n]=_v
-    abstract=re.sub(r"All\s+code and results are\s+open source\.","Code and results are provided as anonymised supplementary material and will be released openly with the de-anonymised version.",abstract)
-    data_avail=data_avail.replace("available at [URL withheld for review].","available at [URL withheld for review]; an anonymised snapshot is provided as\nsupplementary material.")
+    abstract=re.sub(r"All\s+code and results are\s+open source\.","All code, protocol documents and result files will be released openly with the de-anonymised version.",abstract)
+    data_avail=data_avail.replace("available at [URL withheld for review].","available at [URL withheld for review] and will be released openly with the\nde-anonymised version.")
 # ---- inline mathematics in running text (outside $...$ and code spans)
 PHRASES=[("P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8","$P(\\mathrm{TP}(\\tau) \\ge T_{\\min}) \\ge 0.8$ and $P(\\min_i u_i(\\tau) \\ge U_{\\min}) \\ge 0.8$"),
 ("E[C(τ)/TP(τ)]","$\\mathbb{E}[C(\\tau)/\\mathrm{TP}(\\tau)]$"),
