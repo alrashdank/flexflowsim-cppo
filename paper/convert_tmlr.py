@@ -131,8 +131,13 @@ def floats(v):
 tex_body=floats(tex_body)
 # equations: pandoc emits \[...\qquad(1)\]; fine in TMLR.
 title_tex=title.replace(': ', ':\\\\ ',1)
+import sys
+MODE=sys.argv[1] if len(sys.argv)>1 else "submission"     # submission | preprint | accepted
+pkg={"submission":"\\usepackage{tmlr}","preprint":"\\usepackage[preprint]{tmlr}","accepted":"\\usepackage[accepted]{tmlr}"}[MODE]
+author_block=("\\author{\\name Anonymous authors \\email \\\\ \\addr Paper under double-blind review}" if MODE=="submission" else
+ "\\author{\\name Khaled R. Alrashdan \\email kr.alrashdan@paaet.edu.kw \\\\ \\addr Department of Manufacturing Engineering Technology, College of Technological Studies\\\\ Public Authority for Applied Education and Training (PAAET), Kuwait\\\\ ORCID 0000-0001-6304-9061}")
 doc=f"""\\documentclass[10pt]{{article}}
-\\usepackage{{tmlr}}
+{pkg}
 \\usepackage[hidelinks]{{hyperref}}
 \\usepackage{{url}}
 \\usepackage{{amsmath,amssymb}}
@@ -149,7 +154,7 @@ doc=f"""\\documentclass[10pt]{{article}}
 \\providecommand{{\\tightlist}}{{\\setlength{{\\itemsep}}{{0pt}}\\setlength{{\\parskip}}{{0pt}}}}
 \\setlength{{\\LTcapwidth}}{{\\textwidth}}
 \\title{{{title_tex}}}
-\\author{{\\name Anonymous authors \\email \\\\ \\addr Paper under double-blind review}}
+{author_block}
 \\def\\month{{MM}}\\def\\year{{YYYY}}\\def\\openreview{{\\url{{https://openreview.net/forum?id=XXXX}}}}
 \\begin{{document}}
 \\maketitle

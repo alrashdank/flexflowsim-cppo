@@ -1352,7 +1352,7 @@ the content of the article.
 
 ## CRediT authorship contribution statement
 
-**[Author name]:** Conceptualization, Methodology, Software, Investigation,
+**Khaled R. Alrashdan:** Conceptualization, Methodology, Software, Investigation,
 Formal analysis, Data curation, Visualization, Writing – original draft, Writing
 – review & editing.
 
