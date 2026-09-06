@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Build the TMLR supplementary zip (S1 + anonymised S2 code/results snapshot) from a clone of this
-repository. Run from the repository root: python3 paper/make_supplementary.py path/to/S1_original_manuscript.pdf
+"""Build the TMLR supplementary zip (anonymised code/results snapshot) from a clone of this
+repository. Run from the repository root: python3 paper/make_supplementary.py
 Output: TMLR_supplementary.zip (about 60 MB; TMLR limit 100 MB)."""
 import re, sys, shutil, subprocess, pathlib, json, glob, zipfile, tempfile
-S1 = pathlib.Path(sys.argv[1]).resolve()
 root = pathlib.Path(".").resolve(); tmp = pathlib.Path(tempfile.mkdtemp()); snap = tmp / "flexflowsim-cppo-anon"; snap.mkdir()
 subprocess.run(f"git archive HEAD | tar -x -C {snap}", shell=True, check=True)
+# the paper sources and the manuscript are not part of the code snapshot (the PDF is the submission)
+shutil.rmtree(snap / "paper", ignore_errors=True)
+for f in ["R1_manuscript.md"]:
+    (snap / f).unlink(missing_ok=True)
 # scrub identifiers
 (snap/"LICENSE").write_text(re.sub(r"Copyright \(c\) 2026 .*", "Copyright (c) 2026 The Authors (anonymised for review)", (snap/"LICENSE").read_text()))
 for f in ["README.md", "paper6_v6_pilots_README.md", "protocol.md"]:
@@ -34,5 +37,5 @@ with zipfile.ZipFile(s2, "w", zipfile.ZIP_DEFLATED) as z:
     for f in snap.rglob("*"):
         if f.is_file() and "__pycache__" not in f.parts: z.write(f, f.relative_to(tmp))
 with zipfile.ZipFile("TMLR_supplementary.zip", "w", zipfile.ZIP_DEFLATED) as z:
-    z.write(root / "paper" / "README_supplementary.txt", "README_supplementary.txt"); z.write(S1, "S1_original_manuscript.pdf"); z.write(s2, "S2_code_and_results.zip")
+    z.write(root / "paper" / "README_supplementary.txt", "README_supplementary.txt"); z.write(s2, "S2_code_and_results.zip")
 print("wrote TMLR_supplementary.zip", round(pathlib.Path("TMLR_supplementary.zip").stat().st_size / 1e6, 1), "MB")

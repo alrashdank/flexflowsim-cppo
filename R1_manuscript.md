@@ -7,8 +7,8 @@ title: "Why Constrained Reinforcement Learning Appeared to Fail on Flow-Shop Rou
 A reported failure of a constrained reinforcement learning method can be a
 property of the pipeline rather than of the method. This paper documents two
 such properties in a Lagrangian Proximal Policy Optimization (PPO) study of
-multi-server flow-shop routing, revisiting an earlier manuscript that reported
-systematic constraint failure. First, an episode-level constraint was implemented as a per-step penalty on the
+multi-server flow-shop routing, re-examining an initial study, run under a
+pre-registered protocol, that found systematic constraint failure. First, an episode-level constraint was implemented as a per-step penalty on the
 cumulative throughput rate, a signal that is positive while the line fills
 regardless of the policy; under a one-sided dual update it saturates the
 multiplier for any policy, including an oracle (10 of 10 seeds; 0 of 10 with an
@@ -45,13 +45,14 @@ scalarised reward and compared with dispatching rules that receive far less
 tuning attention than the agent does. Two recent systematic reviews of the field
 (Mayerhoff & Schmidt, 2026; Schneider et al., 2026) identify the same weaknesses:
 simulation-only validation, weak baseline practice, and an absence of
-standardised benchmarks. An earlier manuscript by the author (Author, 2026a; referred to below as the
-original manuscript, and provided as Supplementary Material S1) was a response
-to that critique,
-with a pre-registered protocol, disjoint train, validation and test seed ranges,
-tuned dispatching baselines, and non-convergence reported openly.
+standardised benchmarks. An initial study by the author was a response to that
+critique, with a pre-registered protocol (`protocol.md`, commit 391eb0d),
+disjoint train, validation and test seed ranges, tuned dispatching baselines,
+and non-convergence recorded openly. It is referred to below as the initial
+study; its protocol, archived checkpoints and result files are in the companion
+repository (Author, 2026b) and are the objects re-examined here.
 
-That manuscript reported a negative result. Under cost-emphasising reward
+That study found a negative result. Under cost-emphasising reward
 weights, PPO converges to what we called the conservative routing attractor: it
 idles expensive servers, total cost falls, throughput falls further, and
 cost-per-unit (CPU) ends up worse than that of any dispatching rule.
@@ -235,10 +236,9 @@ testbed (N = 2, m = (2, 2)) and 12 for electronics (N = 3, m = (2, 3, 2)). This
 centralised full-route formulation simplifies credit assignment relative to a
 per-stage MDP, at the cost of an action space that grows multiplicatively with
 stage count. The observation vector concatenates stage queue lengths, per-server
-in-service indicators and accumulated cost signals. The original manuscript
-stated that it also contained the current dual multipliers. It does not; the
-Lagrangian wrapper modifies the reward and leaves the observation unchanged, and
-we correct the description here.
+in-service indicators and accumulated cost signals. It does not contain the
+dual multipliers: the Lagrangian wrapper modifies the reward and leaves the
+observation unchanged.
 
 ### 3.2 The conservative routing attractor
 
@@ -254,8 +254,7 @@ with (w_c, w_t, w_w) summing to one, κ = 10, Δt = 1 min, W_t the work in proce
 constants, (2740, 20, 3220) on bakery and (4230, 55, 5100) on electronics, set
 to typical episode totals so that each term is of order one per episode. Here ṅ_t
 is the cumulative average throughput rate d_t / t, with d_t the departures up to
-step t, not an instantaneous rate. The original manuscript described it as
-instantaneous; this was incorrect, and the distinction matters in §4.2. For the
+step t, not an instantaneous rate; the distinction matters in §4.2. For the
 cost-only weights (1, 0, 0) used in the corrected cells, the episode return is
 −κ C(τ)/C_norm, proportional to total dollar cost, so the objective of Eq. (2)
 is optimised without approximation. For w_c near unity PPO solves the problem it was given and
@@ -272,8 +271,9 @@ of Eq. (2),
 $$\max_{\pi}\; \mathbb{E}_\pi\!\left[-C(\tau)\right] \quad \text{s.t.}\quad \mathbb{E}_\pi[\mathrm{TP}(\tau)] \ge T_{\min},\quad \mathbb{E}_\pi[u_i(\tau)] \ge U_{\min}\;\; \forall\, i \in F_{\mathrm{fast}}\qquad(2)$$
 
 with T_min = 18 (bakery) or 50 (electronics) and U_min = 0.50. Both constraints
-are on episode-level quantities. We state this more carefully than the original manuscript did, where the constraint was written as an episode count while the
-implementation used a per-step rate; §4.2 describes the consequences.
+are on episode-level quantities. The initial study stated the constraint as an
+episode count while its implementation penalised a per-step rate; §4.2
+describes the consequences.
 
 Three distinct constraint objects appear in this paper, and much of what follows
 turns on the differences between them. The first is the expectation constraint
@@ -288,7 +288,7 @@ of test episodes on which both hold. Selection therefore imposes two per-episode
 chance constraints, P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8,
 and reporting measures the joint event. Both are stricter than Eq. (2) for any
 policy whose throughput varies between episodes (§3.4 quantifies the gap), and
-§6.7 shows a configuration that satisfies Eq. (2) while failing them. The original manuscript treated the three as interchangeable. They are
+§6.7 shows a configuration that satisfies Eq. (2) while failing them. The initial study treated the three as interchangeable. They are
 not, and §4.2 shows that the version implemented in training was a fourth object
 that coincides with none of them.
 
@@ -311,7 +311,7 @@ and we present it as motivation.
 
 Its consequence, if it holds, is that any apparent success of the constrained
 agent on cost-per-unit must be delivered by something other than the objective.
-In the original manuscript a candidate is the checkpoint-selection rule.
+In the initial study a candidate is the checkpoint-selection rule.
 Requiring at least 16 of 20 validation episodes to satisfy TP ≥ 18, with a
 per-episode standard deviation of about 2.0 units, implies a mean throughput of
 about 19.7, an effective floor above the nominal 18 but less than one standard
@@ -328,14 +328,12 @@ used is given by Eq. (3),
 
 $$\tilde r_t = r_t - \lambda_U\, g_{U,t} - \lambda_T\, g_{T,t}\qquad(3)$$
 
-where r_t is the environment reward of Eq. (1) rather than the bare cost term. In
-the original manuscript both the abstract and the formulation section stated
-that the scalarised reward was replaced by single-objective cost minimisation.
-That was a misdescription of the implementation: every constrained variant
-augments the shaped reward with weights (0.8, 0.1, 0.1) active. We correct the
-description here, and §6.1 reports an ablation isolating the effect of the
-shaping terms. Within confidence intervals there is none, but the description
-had to be corrected regardless.
+where r_t is the environment reward of Eq. (1) rather than the bare cost term.
+The initial study posed the problem as single-objective cost minimisation, but
+every constrained variant it ran augmented the shaped reward with weights
+(0.8, 0.1, 0.1) active. §6.1 reports an ablation isolating the effect of the
+shaping terms; within confidence intervals there is none, but the discrepancy
+between the problem posed and the reward implemented is recorded here.
 
 ### 4.2 The slack signal
 
@@ -363,14 +361,14 @@ multiplier with the mean taken over the post-warm-up steps of that episode,
 
 $$\lambda \leftarrow \operatorname{clip}\!\left(\lambda + \eta\,\operatorname{mean}_t\, g_t,\; 0,\; \lambda_{\max}\right)\qquad(5)$$
 
-which the original manuscript described as "a violation-driven penalty
-accumulator with monotone growth, not true primal-dual ascent", turns this bias
-into a structural outcome. The measured mean per-step g_T for ShortestQueue is
+a violation-driven ratchet with monotone growth rather than a dual ascent,
+turns this bias into a structural outcome. The measured mean per-step g_T for ShortestQueue is
 0.0003–0.0029 on bakery and 0.0010–0.0064 on electronics; at η_T = 4000 this is a
 per-episode increment of 1–26 even for an oracle. Over 3,333 training episodes,
 λ_T reaches its cap of 20,000 for any policy. For realistic electronics policies
 (TP ≈ 35–46), the increment is 40–80 per episode and the cap is reached after
-250–500 episodes, or 8–15% of training, consistent with where the original manuscript observed it. Saturation therefore reflects the signal, not the policy.
+250–500 episodes, or 8–15% of training, consistent with where the initial study observed it. Saturation therefore
+reflects the signal, not the policy.
 
 ### 4.3 Corrected slack
 
@@ -401,7 +399,7 @@ $$\lambda_U \leftarrow \operatorname{clip}\!\left(\lambda_U + \eta_U \sum_{i\in 
 
 The division by H keeps the throughput slack in the per-step rate units of
 Eq. (4), so that η_T, λ_T's initial value and its cap carry over unchanged from
-the original manuscript; the utilisation slack is already in per-step units.
+the initial study; the utilisation slack is already in per-step units.
 Under Eqs. (8) and (9) the ratchet advances only on episodes that violate, so
 saturation is no longer guaranteed for an oracle, which is the property the
 mechanism ablation of §6.1 tests. Two consequences of retaining the hinge
@@ -494,9 +492,9 @@ testbed. This anchors the feasible region on the heuristic family the agent is
 compared against, and Table 1 shows the consequence: at the thresholds used,
 stateless routing satisfies both constraints on 78–90% of episodes, so the
 constraints are not demanding. §6.6 reports how satisfaction changes as the
-thresholds are tightened, and §8 discusses the limitation. The original manuscript stated
-that random routing was dominated by LeastUtilised and ShortestQueue without
-reporting it; Table 1 shows that this was true but uninformative, since the gap
+thresholds are tightened, and §8 discusses the limitation. The initial study treated
+random routing as dominated by LeastUtilised and ShortestQueue and did not
+report it; Table 1 shows that this was true but uninformative, since the gap
 between LeastUtilised and UniformRandom on electronics is $0.56 per unit.
 
 ### 5.3 Training and evaluation protocol
@@ -511,7 +509,7 @@ ratios), and joint satisfaction is the fraction of episodes on which both
 constraints hold. Confidence intervals in Tables 2–4 are 95% two-sided
 t-intervals across seeds, and in Table 1 across episodes, so the two are not
 directly comparable. PPO is the Stable-Baselines3 implementation (Raffin et al., 2021) with
-the hyperparameters of the original manuscript (learning rate 3×10⁻⁴,
+the hyperparameters of the initial study (learning rate 3×10⁻⁴,
 n_steps 2048, batch 64, 10 epochs, γ = 0.99, GAE λ = 0.95, clip 0.2, entropy
 coefficient 0.01). Dual variables: λ_U initialised at 5 with step 20 and cap 500;
 λ_T initialised at 200 with step 4000 and cap 20,000.
@@ -520,7 +518,7 @@ Two protocol changes are recorded in `protocol_amendment_r1.md`, committed
 before the full-budget runs it governs. First, both evaluation modes are computed
 and reported for every checkpoint and every test, and checkpoint selection reads
 the stochastic validation episodes so that selection and reporting share a
-criterion. The original manuscript's argmax selection is still computed and
+criterion. The initial study's argmax selection is still computed and
 reported alongside. Second, full-budget training is executed in 400K-step
 segments to fit the execution environment. Policy weights, optimiser state, dual
 variables and the dual episode counter are carried across segment boundaries;
@@ -616,7 +614,7 @@ the policy occasionally violates and the hinged update ratchets. It does not
 saturate, although it has not converged either.
 
 Evaluation mode accounts for the reported pass/fail verdict. Every cell,
-including the original implementation, reproduces the original manuscript's
+including the original implementation, reproduces the initial study's
 failure pattern under argmax evaluation, with $122–155 per unit and essentially
 zero joint satisfaction, and every cell passes on the same checkpoints under
 stochastic evaluation. The between-seed confidence intervals also collapse, from
@@ -716,26 +714,27 @@ agent is significantly worse than on both metrics.
 A second feature of Table 3 is the between-seed dispersion. Under argmax
 evaluation the electronics confidence intervals are ±43 to ±76; under stochastic
 evaluation of the same checkpoints they are ±1.6. The high seed-to-seed
-instability that the original manuscript reported on electronics was, to a first
+instability that the initial study found on electronics was, to a first
 approximation, the variance of an argmax taken over near-uniform action
 distributions (§6.5).
 
-### 6.3 Archival re-evaluation of the original manuscript's checkpoints
+### 6.3 Archival re-evaluation of the initial study's checkpoints
 
-The original manuscript's checkpoints were re-evaluated under Amendment R1
+The initial study's checkpoints were re-evaluated under Amendment R1
 §A2.1 without retraining: V4, the one-sided Lagrangian of §4.2, and V6, a
 PID-Lagrangian comparator with exponentially smoothed slack (Stooke et al.,
 2020), on both testbeds and every archived seed (five for V4, four of five for
 V6). We ask two questions. The first (Q1)
-concerns the exact checkpoint the original manuscript selected and reported,
+concerns the exact checkpoint the initial study selected and recorded,
 evaluated stochastically. The second (Q2) concerns the checkpoint that stochastic
 selection would have chosen, and what it scores.
 
 Applying the original argmax selection rule to the archived validation sweep
-reproduces the originally selected checkpoint in 18 of 18 runs and the reported
+reproduces the originally selected checkpoint in 18 of 18 runs and the recorded
 test figures to the cent: V4 bakery $149.30 ± 27.73 and V4 electronics
-$112.71 ± 13.46 are Tables 3 and 5 of the original manuscript. The pipeline
-evaluated here is the one that produced those figures. Table 5 reports both
+$112.71 ± 13.46 are the aggregates in the initial study's result files
+(`results/*/summary.csv` in the repository). The pipeline evaluated here is the
+one that produced those figures. Table 5 reports both
 questions for all four archived runs.
 
 **Table 5.** Archival re-evaluation. Q1 columns evaluate the originally selected
@@ -749,7 +748,7 @@ one seed's checkpoints were not archived.
 | V4 bakery | 5 | $149.30 ± 27.73 | 69% | $140.56 ± 3.15 | 91% | $139.60 ± 2.49 | 80% | 5/5 |
 | V6 bakery | 4 | $141.57 ± 22.71 | 74% | $140.46 ± 1.60 | 84% | $139.94 ± 3.72 | 83% | 4/4 |
 
-The five electronics V4 checkpoints that the original manuscript reported as
+The five electronics V4 checkpoints that the initial study recorded as
 failing systematically, at $113.31, $112.08, $95.38, $118.35 and $124.44, score
 $83.78, $81.23, $78.68, $81.73 and $81.33 as stochastic policies, with joint
 constraint satisfaction of 64–88%. The checkpoint files are unchanged. Had the
@@ -779,7 +778,7 @@ run under both slack signals.
 **Figure 1.** λ_T over training, five seeds per cell, both testbeds, log scale.
 Under the original cumulative-rate signal the multiplier ramps monotonically to
 its 20,000 cap on every seed, at 0.19–0.24M steps on electronics (12–15% of the
-budget, matching the original manuscript's Figure 3) and at 0.59–0.65M on bakery
+budget, matching the saturation times logged in the initial study) and at 0.59–0.65M on bakery
 (39–43%), and is flat thereafter. The difference in saturation time between
 testbeds is what §4.2 predicts: the fill-phase gap is larger where flow time is a
 larger fraction of the horizon and the floor sits closer to the achievable rate.
@@ -791,11 +790,11 @@ Selected checkpoints do not cluster: under stochastic selection they range from
 100K to 1.6M in both cells on both testbeds, so we make no claim that the
 original budget was too long or too short.
 
-The magnitude argument of the original manuscript also needs correcting, and
-the correction applies to the corrected cell as much as to the control. The
-original manuscript compared the integrated penalty at saturation with "the
-unconstrained per-episode cost reward (−$2,000 to −$4,000)" and concluded a
-ratio of 35–70×. That comparison mixed units. Dollars never enter the reward: by
+The scale of the penalty against the objective also needs stating correctly,
+and the statement applies to the corrected cell as much as to the control. The
+initial study's analysis compared the integrated penalty at saturation with the
+per-episode cost in dollars (−$2,000 to −$4,000) and concluded a ratio of
+35–70×. That comparison mixed units. Dollars never enter the reward: by
 Eq. (1) the per-episode base return in the units the agent optimises is
 −κ C(τ)/C_norm, which is −10.1 to −10.6 on both testbeds. Against this, the
 penalty of Eq. (7) evaluated on the test episodes of the corrected runs is
@@ -823,7 +822,7 @@ irrelevant.
 
 This is the reason the corrected agent could not be expected to learn
 cost-efficient routing, and it is independent of the two artefacts. It follows
-from two design choices inherited unchanged from the original manuscript: the
+from two design choices inherited unchanged from the initial study: the
 multiplier initial values and step sizes, which were set in the units of the
 per-step signal of Eq. (4) and are large relative to a reward whose episode
 return is of order ten; and the hinge in the dual update. The experiment that tests
@@ -1065,7 +1064,7 @@ objective is not cost-per-unit.
 
 ### 7.1 Two artefacts
 
-The original manuscript's electronics result decomposes into two artefacts,
+The initial study's electronics result decomposes into two artefacts,
 neither of which is a property of constrained reinforcement learning. The first
 is a constraint-implementation error with a specific and generalisable form. An
 episode-level constraint was translated into a per-step signal by way of a
@@ -1084,7 +1083,7 @@ The second artefact is an evaluation-mode mismatch: reporting the argmax of a
 policy that is close to uniform, selected and trained as a stochastic policy.
 The argmax of such a policy is an essentially arbitrary deterministic router
 (§6.5: two seeds agree on 9–18% of states, and logit noise of 0.1 moves the
-greedy action at a quarter of them), and the original manuscript's finding of
+greedy action at a quarter of them), and the initial study's finding of
 severe seed-to-seed instability on electronics was largely a measurement of
 that arbitrariness. Of the two artefacts this is the one that reverses the
 reported verdict, and §6.3 shows that it does so on the original checkpoints
@@ -1103,7 +1102,7 @@ cheaper per unit than the best learned policy on electronics with 100%
 constraint satisfaction, and is indistinguishable from it on bakery.
 
 §6.4 supplies the reason for the near-uniform policies, and it is not the one
-the original manuscript gave. The agent was not defeated by a penalty that
+the initial study's analysis gave. The agent was not defeated by a penalty that
 overwhelmed its objective; its objective was, for all practical purposes, the
 constraint terms. With the multipliers two to four orders of magnitude above the
 scale of the cost term, never released by the hinged update, and with both
@@ -1112,7 +1111,7 @@ rewarded surplus throughput and surplus fast-server busy time and registered
 cost only in the third or fourth significant figure. A near-uniform router
 tilted toward the fast servers is a reasonable response to that objective, and
 it is what every hinged cell produced. The entropy coefficient of 0.01,
-retained from the original manuscript for comparability, works in the same
+retained from the initial study for comparability, works in the same
 direction.
 
 §6.7 then closes the question that §6.4 opens. With the multipliers on the scale
@@ -1151,7 +1150,7 @@ constraint, rather than an expectation constraint whose satisfaction with a
 one-unit margin leaves a quarter of episodes infeasible. And a functioning dual
 is a necessary condition, not a sufficient one; here it changed what was
 learned without making it competitive. Until those changes are made and tested,
-the practical recommendation of the original manuscript stands, for a
+the practical recommendation of the initial study stands, for a
 different reason. Tuned dispatching rules remain the baseline to beat on
 problems of this size and structure. The constrained agent no longer shows a
 systematic constraint failure; it meets the protocol's criterion either the way
@@ -1187,7 +1186,7 @@ of the slack signal, and its measured value under a known-good reference policy
 should be reported. The magnitude of the constraint terms relative to the
 objective, at initialisation and at the end of training, should be reported
 with them; a single ratio would have revealed the problem of §6.4 in the
-original manuscript. Where a stochastic policy is evaluated, the evaluation
+initial study. Where a stochastic policy is evaluated, the evaluation
 mode should be stated and both modes reported, together with a measure of how
 far the learned distribution is from uniform. And where a learned router is
 compared against dispatching rules, uniform-random and round-robin routing
@@ -1234,7 +1233,7 @@ validation draws that selected the checkpoints were single and unseeded (§5.3).
 **Selection bias in the archival comparison.** Q2 in §6.3 re-selects checkpoints
 on the same stochastic validation episodes now used for reporting. This is the
 protocol the amendment specifies, applied identically to every run, but it is a
-different selection from the one the original manuscript used. The Q1 columns,
+different selection from the one the initial study used. The Q1 columns,
 which evaluate the originally selected checkpoint, are the cleaner like-for-like
 comparison, and the principal claim rests on them.
 
@@ -1266,13 +1265,13 @@ configuration.
 **Segmented training.** Full-budget runs flush the rollout buffer three times per
 run. We regard the effect as negligible but have not measured it directly.
 
-**Simulation only.** As in the original manuscript, there is no physical
+**Simulation only.** As in the initial study, there is no physical
 validation.
 
 ## 9. Conclusion
 
 A negative result about constrained reinforcement learning for flow-shop
-routing, reported in an earlier manuscript by the author, reflected the
+routing, obtained in an initial study by the author, reflected the
 instrumentation used to obtain it. A per-step cumulative-rate slack signal
 guaranteed multiplier saturation for any policy, including an oracle, and greedy
 evaluation of a near-uniform policy measured an arbitrary deterministic router
@@ -1383,12 +1382,8 @@ https://doi.org/10.1007/s44444-026-00128-9
 
 Altman, E. (1999). *Constrained Markov Decision Processes*. Chapman & Hall/CRC.
 
-Author. (2026a). Failure Modes of Constrained PPO in Multi-Server Flow-Shop
-Routing: A Benchmark Against Dispatching Rules. Manuscript. [Details withheld for
-review.]
-
-Author. (2026b). FlexFlowSim-CPPO: Companion code. [Computer software]. GitHub.
-[URL withheld for review.]
+Author. (2026b). FlexFlowSim-CPPO: Companion code, protocol documents and
+archived results. [Computer software]. GitHub. [URL withheld for review.]
 
 Babor, M., & Hitzmann, B. (2022). *Small and medium-sized bakery production data
 for scheduling* (Version 2) [Dataset]. Mendeley Data.
@@ -1573,7 +1568,7 @@ validation over 16 checkpoints. The full R1 matrix (20 pilot runs, 20 full-budge
 runs, 18 archival re-evaluations of 279 checkpoints, baselines and analyses)
 consumed approximately 16 compute-hours; the seeded per-episode re-evaluations
 and analyses of R2 (about 5,400 further evaluation episodes) roughly one more,
-and the five symmetric-cell runs of §6.7 about three and a half. The original manuscript's runs were
+and the five symmetric-cell runs of §6.7 about three and a half. The initial study's runs were
 executed on a consumer-grade Windows machine at roughly 20–22 minutes per
 1.5–1.6M-step run.
 
@@ -1586,7 +1581,7 @@ executed on a consumer-grade Windows machine at roughly 20–22 minutes per
 | CPO, RCPO | Constrained Policy Optimization; Reward Constrained Policy Optimization |
 | GAE | Generalised Advantage Estimation |
 | PID | Proportional–integral–derivative (controller form of the dual update in V6) |
-| V4, V6 | Original manuscript's one-sided Lagrangian variant; its PID-Lagrangian comparator |
+| V4, V6 | Initial study's one-sided Lagrangian variant; its PID-Lagrangian comparator |
 | CPU | Cost-per-unit ($ per completed job; primary metric) |
 | TP(τ) | Throughput: jobs completed in episode τ |
 | Joint sat. | Fraction of episodes satisfying both constraints |
