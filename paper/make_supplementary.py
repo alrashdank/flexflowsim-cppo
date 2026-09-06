@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Build the TMLR supplementary zip (S1 + anonymised S2 code/results snapshot) from a clone of this
-repository. Run from the repository root: python3 paper/make_supplementary.py path/to/S1_original_submission.pdf
+repository. Run from the repository root: python3 paper/make_supplementary.py path/to/S1_original_manuscript.pdf
 Output: TMLR_supplementary.zip (about 60 MB; TMLR limit 100 MB)."""
 import re, sys, shutil, subprocess, pathlib, json, glob, zipfile, tempfile
 S1 = pathlib.Path(sys.argv[1]).resolve()
@@ -34,5 +34,5 @@ with zipfile.ZipFile(s2, "w", zipfile.ZIP_DEFLATED) as z:
     for f in snap.rglob("*"):
         if f.is_file() and "__pycache__" not in f.parts: z.write(f, f.relative_to(tmp))
 with zipfile.ZipFile("TMLR_supplementary.zip", "w", zipfile.ZIP_DEFLATED) as z:
-    z.write(root / "paper" / "README_supplementary.txt", "README_supplementary.txt"); z.write(S1, "S1_original_submission.pdf"); z.write(s2, "S2_code_and_results.zip")
+    z.write(root / "paper" / "README_supplementary.txt", "README_supplementary.txt"); z.write(S1, "S1_original_manuscript.pdf"); z.write(s2, "S2_code_and_results.zip")
 print("wrote TMLR_supplementary.zip", round(pathlib.Path("TMLR_supplementary.zip").stat().st_size / 1e6, 1), "MB")
