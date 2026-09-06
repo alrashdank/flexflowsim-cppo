@@ -1297,6 +1297,27 @@ constraint actually implemented, the scale of the penalty against the objective,
 the evaluation mode actually used, and a random-routing control with its own
 uncertainty, and we would encourage all four as routine practice.
 
+## Broader impact statement {-}
+
+This is a simulation study of production routing with no human subjects and no
+personal data. The bakery testbed is calibrated to the processing-time records of
+a published production dataset (Babor & Hitzmann, 2022); that dataset also
+contains anonymised employee shift records, which we did not use, and the
+simulator models machines only, including the "manual inspection" station of
+the electronics testbed, which is represented by a service-time distribution
+and a cost rate rather than by any person. The paper's practical conclusion is
+negative: it recommends tuned dispatching rules over the learned controllers it
+studies, so it does not encourage the deployment of a reinforcement learning
+system in a plant. Its intended effect on practice is on how such systems are
+evaluated and reported, which we consider a benefit. Two remarks on possible
+misuse. Utilisation-floor constraints of the kind studied here, if applied to
+human-operated stations rather than machines, would impose a minimum workload on
+people and should be set with occupational limits in mind, not only cost; and a
+learned router that meets a constraint on average while violating it on a
+quarter of shifts (§6.7) would be unsuitable wherever the per-shift target
+matters, which the paper's per-episode reporting is designed to make visible.
+The study's compute footprint is small (about 20 CPU-hours).
+
 ## Data availability
 
 FlexFlowSim-CPPO (Author, 2026b), the pre-registered protocol (`protocol.md`,
