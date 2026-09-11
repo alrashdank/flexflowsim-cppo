@@ -1,0 +1,313 @@
+{
+ "ablate": {
+  "cumrate: shaped minus cost-only, cost per unit ($)": {
+   "ci_high": 4.057091970967,
+   "ci_low": -0.421864608217628,
+   "difference": 1.9288074560987667,
+   "p": 0.1018,
+   "p_is_at_resolution_limit": false
+  },
+  "cumrate: shaped minus cost-only, joint satisfaction (pp)": {
+   "ci_high": 8.0,
+   "ci_low": -32.4,
+   "difference": -11.600000000000001,
+   "p": 0.2524,
+   "p_is_at_resolution_limit": false
+  },
+  "episode: shaped minus cost-only, cost per unit ($)": {
+   "ci_high": 1.4685121809686863,
+   "ci_low": -2.066001162994392,
+   "difference": -0.22162942741918812,
+   "p": 0.8136,
+   "p_is_at_resolution_limit": false
+  },
+  "episode: shaped minus cost-only, joint satisfaction (pp)": {
+   "ci_high": 8.0,
+   "ci_low": -6.400000000000006,
+   "difference": 0.8000000000000114,
+   "p": 0.8824,
+   "p_is_at_resolution_limit": false
+  }
+ },
+ "cost": {
+  "symmetric vs LeastUtilised": {
+   "ci_high": -29.673955000006696,
+   "ci_low": -228.75568500001228,
+   "difference": -128.51360000001023,
+   "p": 0.013,
+   "p_is_at_resolution_limit": false
+  },
+  "symmetric vs RoundRobin": {
+   "ci_high": 182.76023999999958,
+   "ci_low": -42.342710000000025,
+   "difference": 71.67839999999978,
+   "p": 0.203,
+   "p_is_at_resolution_limit": false
+  },
+  "symmetric vs ShortestQueue": {
+   "ci_high": 21.435134999984026,
+   "ci_low": -182.29321500001248,
+   "difference": -79.27360000001681,
+   "p": 0.1192,
+   "p_is_at_resolution_limit": false
+  },
+  "symmetric vs UniformRandom": {
+   "ci_high": 187.26586000000339,
+   "ci_low": -53.414254999998136,
+   "difference": 67.45440000000326,
+   "p": 0.2648,
+   "p_is_at_resolution_limit": false
+  },
+  "symmetric vs corrected": {
+   "ci_high": 71.9876699999959,
+   "ci_low": -135.19146000000646,
+   "difference": -30.96360000000368,
+   "p": 0.5424,
+   "p_is_at_resolution_limit": false
+  }
+ },
+ "fill": {
+  "bakery": {
+   "budget_episodes": 3142,
+   "cap_at_episode": 1581,
+   "crossing_max": 434,
+   "crossing_median": 184.0,
+   "crossing_min": 100,
+   "increment_needed_for_cap": 6.301718650541057,
+   "increment_per_episode": 12.524104127131816,
+   "mean_g_T": 0.0031310260317829537,
+   "n_episodes": 50,
+   "saturates_within_budget": true,
+   "slack_needed_for_cap": 0.001575429662635264,
+   "violating_step_fraction": 0.44918205804749334
+  },
+  "electronics": {
+   "budget_episodes": 3352,
+   "cap_at_episode": 915,
+   "crossing_max": 399,
+   "crossing_median": 193.5,
+   "crossing_min": 101,
+   "increment_needed_for_cap": 5.906921241050119,
+   "increment_per_episode": 21.640714187085628,
+   "mean_g_T": 0.005410178546771407,
+   "n_episodes": 50,
+   "saturates_within_budget": true,
+   "slack_needed_for_cap": 0.0014767303102625297,
+   "violating_step_fraction": 0.3138786279683377
+  }
+ },
+ "lambda": {
+  "bakery/cost-episode": {
+   "seed_123": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3142,
+    "final_lam_T": 2691.666666666671,
+    "mean_increment_to_cap": null
+   },
+   "seed_2024": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3142,
+    "final_lam_T": 3066.6666666666706,
+    "mean_increment_to_cap": null
+   },
+   "seed_42": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3142,
+    "final_lam_T": 3158.33333333334,
+    "mean_increment_to_cap": null
+   },
+   "seed_7": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3142,
+    "final_lam_T": 3616.666666666677,
+    "mean_increment_to_cap": null
+   },
+   "seed_999": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3142,
+    "final_lam_T": 2525.0,
+    "mean_increment_to_cap": null
+   }
+  },
+  "bakery/shaped-cumrate": {
+   "seed_123": {
+    "cap_at_episode": 1223,
+    "cap_at_fraction": 0.38924252068746024,
+    "episodes": 3142,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 16.191517299783992
+   },
+   "seed_2024": {
+    "cap_at_episode": 1359,
+    "cap_at_fraction": 0.4325270528325907,
+    "episodes": 3142,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 14.575142516823687
+   },
+   "seed_42": {
+    "cap_at_episode": 1336,
+    "cap_at_fraction": 0.4252068746021642,
+    "episodes": 3142,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 14.824281408542591
+   },
+   "seed_7": {
+    "cap_at_episode": 1309,
+    "cap_at_fraction": 0.41661362189688095,
+    "episodes": 3142,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 15.127530824725552
+   },
+   "seed_999": {
+    "cap_at_episode": 1241,
+    "cap_at_fraction": 0.3949713558243157,
+    "episodes": 3142,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 15.965883104647093
+   }
+  },
+  "electronics/cost-episode": {
+   "seed_123": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3352,
+    "final_lam_T": 3558.333333333333,
+    "mean_increment_to_cap": null
+   },
+   "seed_2024": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3352,
+    "final_lam_T": 7741.666666666659,
+    "mean_increment_to_cap": null
+   },
+   "seed_42": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3352,
+    "final_lam_T": 7858.333333333327,
+    "mean_increment_to_cap": null
+   },
+   "seed_7": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3352,
+    "final_lam_T": 3800.0000000000005,
+    "mean_increment_to_cap": null
+   },
+   "seed_999": {
+    "cap_at_episode": null,
+    "cap_at_fraction": null,
+    "episodes": 3352,
+    "final_lam_T": 3533.333333333332,
+    "mean_increment_to_cap": null
+   }
+  },
+  "electronics/shaped-cumrate": {
+   "seed_123": {
+    "cap_at_episode": 427,
+    "cap_at_fraction": 0.12738663484486873,
+    "episodes": 3352,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 46.37401517632922
+   },
+   "seed_2024": {
+    "cap_at_episode": 504,
+    "cap_at_fraction": 0.15035799522673032,
+    "episodes": 3352,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 39.303217166540115
+   },
+   "seed_42": {
+    "cap_at_episode": 402,
+    "cap_at_fraction": 0.11992840095465394,
+    "episodes": 3352,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 49.306512657877875
+   },
+   "seed_7": {
+    "cap_at_episode": 468,
+    "cap_at_fraction": 0.13961813842482101,
+    "episodes": 3352,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 42.339884240844135
+   },
+   "seed_999": {
+    "cap_at_episode": 435,
+    "cap_at_fraction": 0.12977326968973746,
+    "episodes": 3352,
+    "final_lam_T": 20000.0,
+    "mean_increment_to_cap": 45.5668526280407
+   }
+  }
+ },
+ "symsat": {
+  "greedy": {
+   "joint_satisfied": 0.1,
+   "mean_throughput": 41.82,
+   "mean_total_cost": 4479.400799999999,
+   "n_episodes": 250,
+   "tp_satisfied": 0.128,
+   "util_satisfied": 0.548
+  },
+  "selection": {
+   "checkpoints_qualifying": 14,
+   "checkpoints_validated": 95,
+   "per_seed": {
+    "seed_123": {
+     "n_checkpoints": 19,
+     "qualifying": [
+      300000,
+      601408,
+      1304224
+     ]
+    },
+    "seed_2024": {
+     "n_checkpoints": 19,
+     "qualifying": [
+      200000
+     ]
+    },
+    "seed_42": {
+     "n_checkpoints": 19,
+     "qualifying": [
+      100000,
+      200000,
+      400000,
+      601408
+     ]
+    },
+    "seed_7": {
+     "n_checkpoints": 19,
+     "qualifying": [
+      300000,
+      1102816
+     ]
+    },
+    "seed_999": {
+     "n_checkpoints": 19,
+     "qualifying": [
+      100000,
+      701408,
+      1002816,
+      1102816
+     ]
+    }
+   },
+   "seeds_with_no_qualifying_checkpoint": 0
+  },
+  "stochastic": {
+   "joint_satisfied": 0.748,
+   "mean_throughput": 54.064,
+   "mean_total_cost": 4413.92040000001,
+   "n_episodes": 250,
+   "tp_satisfied": 0.848,
+   "util_satisfied": 0.82
+  }
+ }
+}

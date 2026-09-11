@@ -16,9 +16,10 @@ kr.alrashdan@paaet.edu.kw
 
 **Article type:** Research Article
 
-**Word count:** approximately 7,100 words of main text, excluding abstract,
-references, tables and appendices; 5 tables and 2 figures in the main text,
-3 supplementary tables in Appendix B.
+**Word count:** approximately 8,900 words of main text (Sections 1–9), excluding
+abstract, references, tables, displayed equations and appendices; 5 tables and
+2 figures in the main text, 3 supplementary tables in Appendix B and a
+nomenclature table in Appendix C.
 
 ---
 
