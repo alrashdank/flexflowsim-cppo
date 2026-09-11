@@ -16,11 +16,12 @@ kr.alrashdan@paaet.edu.kw
 
 **Article type:** Research Article
 
-**Word count:** 12,710 words in the manuscript file as counted by Word, of which
-approximately 8,900 are main text (Sections 1–9); the remainder is the abstract,
+**Word count:** 10,772 words in the manuscript file as counted by Word, of which
+approximately 6,500 are main text (Sections 1–9); the remainder is the abstract,
 the tables, the displayed equations, the references and Appendices A–C. The main
 text contains 5 tables and 2 figures; Appendix B contains 3 supplementary tables
-and Appendix C a nomenclature table.
+and Appendix C a nomenclature table. The manuscript carries page numbers and
+continuous line numbers.
 
 ---
 

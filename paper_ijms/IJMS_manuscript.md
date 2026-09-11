@@ -2,6 +2,13 @@
 title: "Objective, constraint and evaluation alignment in constrained reinforcement learning for multi-server flow-shop routing"
 ---
 
+Khaled R. Alrashdan
+
+Department of Manufacturing Engineering Technology, College of Technological
+Studies, Public Authority for Applied Education and Training (PAAET), Kuwait
+
+kr.alrashdan@paaet.edu.kw · ORCID 0000-0001-6304-9061
+
 ## Abstract
 
 Constrained reinforcement learning is increasingly applied to production
@@ -30,388 +37,326 @@ flow-shop routing, dispatching rules, benchmarking, production control
 ## 1. Introduction
 
 Reinforcement learning (RL) is now routinely proposed for routing and sequencing
-decisions in production systems. Two recent systematic reviews of the field
-[@mayerhoff2026slr; @schneider2026role] report the same weaknesses across
-roughly two hundred studies: validation in simulation only, dispatching-rule
-baselines that receive far less tuning attention than the learned agent, and an
-absence of standardised benchmarks. Work that responds to that critique tends to
-concentrate on the baselines and the protocol. This paper argues that a second
-class of problem sits upstream of both, in the instrumentation of the
-constrained formulation itself, and that it is capable of producing a reported
+in production systems. Two recent systematic reviews [@mayerhoff2026slr;
+@schneider2026role] report the same weaknesses across roughly two hundred
+studies: validation in simulation only, dispatching-rule baselines tuned far less
+attentively than the learned agent, and no standardised benchmarks. Work
+answering that critique concentrates on the baselines and the protocol. This
+paper argues that a second class of problem sits upstream of both, in the
+instrumentation of the constrained formulation itself, and can produce a reported
 result that is an artefact of the pipeline rather than a property of the method.
 
-A constrained learning pipeline contains a chain of five objects that are easy
-to conflate. There is the constraint written in the formulation, normally an
-expectation over an episode. There is the surrogate the training loop actually
-penalises, which must be expressed per step for a policy-gradient method to use
-it. There is the scale of the multipliers that weight that surrogate against the
-objective. There is the mode in which the trained stochastic policy is
-evaluated, by sampling or by its mode. And there is the metric finally reported,
-which in this literature is almost always a ratio such as cost per unit. Each
-link is a defensible engineering choice in isolation. When two of them disagree,
-aggregate performance figures do not reveal which link is at fault, and the
+A constrained learning pipeline contains five objects that are easy to conflate:
+the constraint written in the formulation, normally an expectation over an
+episode; the surrogate the training loop penalises, which must be expressed per
+step for a policy-gradient method; the scale of the multipliers weighting that
+surrogate against the objective; the mode in which the trained stochastic policy
+is evaluated; and the metric finally reported, in this literature almost always a
+ratio such as cost per unit. Each link is defensible in isolation. When two
+disagree, aggregate performance figures do not reveal which is at fault, and the
 natural reading of a poor result is that the method does not work.
 
-This study measures the consequences of three such breaks, using Lagrangian
-Proximal Policy Optimization (PPO) [@schulman2017ppo] on two multi-server
-flow-shop testbeds, and it does so on a system where the answer can be checked
-against tuned dispatching rules. The vehicle is the author's own earlier study,
-run under a protocol committed in advance, which reported that no seed
-satisfied throughput and utilisation constraints on a 12-route electronics
-testbed and that the throughput multiplier saturated against its cap in every
-run. That study is referred to below as the initial study; its protocol,
+This study measures three such breaks using Lagrangian Proximal Policy
+Optimization (PPO) [@schulman2017ppo] on two multi-server flow-shop testbeds,
+where the answer can be checked against tuned dispatching rules. The vehicle is
+the author's own earlier study, run under a protocol committed in advance, which
+reported that no seed satisfied throughput and utilisation constraints on a
+12-route electronics testbed and that the throughput multiplier saturated in
+every run. That study is referred to below as the initial study; its protocol,
 archived checkpoints and result files are in the companion repository
 [@flexflowsimcppo] and are the objects re-examined here.
 
-The first break is between the stated constraint and the training surrogate. The
+The first break is between the stated constraint and the training surrogate: the
 constraint is on an episode total, but the implemented signal penalised the
-shortfall of a cumulative average rate at every step. In a flow shop whose flow
-time is a sizeable fraction of the shift, that quantity is below its floor for a
-long prefix of every episode whatever the policy does, because the line is
-filling. Section 4.2 shows that under a monotone one-sided dual update this
-drives the multiplier upward for any policy, derives from measurable quantities
-the slack above which it reaches its cap within the training budget, and confirms
-that an oracle dispatching rule exceeds that threshold by a factor of two while
-satisfying the true constraint with a 14–23% margin.
+shortfall of a cumulative average rate at every step, which in a flow shop whose
+flow time is a sizeable fraction of the shift sits below its floor for a long
+prefix of every episode whatever the policy does. Under a monotone one-sided dual
+update this grows without bound, and an oracle dispatching rule exceeds the
+saturation threshold by a factor of two while satisfying the true constraint with
+a 14–23% margin (Section 4.2). The second is between the policy trained and the
+policy evaluated: the learned distributions are close to uniform, so their greedy
+action turns on logit differences that neither replicate across seeds nor survive
+small perturbations, and evaluating the archived checkpoints by sampling reverses
+the original verdict without retraining (Sections 6.3 and 6.5).
 
-The second break is between the policy trained and the policy evaluated. The
-learned action distributions are close to uniform, and the greedy action of a
-near-uniform distribution is a deterministic router selected by differences that
-neither replicate across seeds nor survive small perturbations of the logits
-(Section 6.5). Evaluated by sampling, the archived checkpoints satisfy their
-constraints and the original pass/fail verdict reverses without any retraining
-(Section 6.3).
-
-The third break is between the objective optimised and the metric reported, and
-it survives the correction of the other two. With both artefacts removed, the
-agent satisfies the constraint criterion on every seed, but it is
-indistinguishable from round-robin routing on cost per unit under a paired
-hierarchical bootstrap and 6.6% more expensive than a two-line queue-length
-rule. Section 6.4 explains why: in every one-sided configuration studied the
-constraint terms of the augmented objective exceed the cost term by two to four
-orders of magnitude and cannot be released, so cost was never effectively part
-of what was optimised. A further cell, specified in a protocol amendment before
-its runs, gives the dual multipliers the scale of the reward and a symmetric
-update. The dual then works as a dual, the learned policy becomes concentrated
-and state-dependent, and it moves toward the throughput floor exactly as a
-total-cost objective directs, leaving it no better on the reported metric than
-stateless routing and significantly worse than a queue-length rule (Section 6.7).
-The mechanism is measurable across the seven load-spreading policies of this
-study: total episode cost spans 4.6% across them while throughput spans 15.5%,
-so cost per unit falls with throughput and an agent minimising total cost has no
-reason to buy throughput above its floor.
+The third break, between the objective optimised and the metric reported,
+survives correction of the other two. With both artefacts removed the agent
+satisfies the constraint criterion on every seed yet is indistinguishable from
+round-robin routing on cost per unit, because in every one-sided configuration
+studied the constraint terms exceed the cost term by two to four orders of
+magnitude and cannot be released (Section 6.4). A further cell, specified in a
+protocol amendment before its runs, gives the multipliers the scale of the reward
+and a symmetric update; the dual then behaves as a dual and the policy becomes
+state-dependent, but it moves to the throughput floor exactly as a total-cost
+objective directs (Section 6.7). The mechanism is measurable across the seven
+load-spreading policies of this study: total episode cost spans 4.6% while
+throughput spans 15.5%, so cost per unit falls with throughput and an agent
+minimising total cost has no reason to buy throughput above its floor.
 
 The scope of these results should be stated plainly. The first two breaks are
-properties of the instrumentation, not of constrained RL, and the first in
-particular is easy to introduce and hard to detect from aggregate metrics.
-Correcting them does not make the method competitive on this problem, and it
-does not make deterministic deployment feasible. What the study offers is a
-measured account of where a constrained pipeline can come apart, the
-diagnostics that expose each break, and a demonstration that the residual
-failure lies in the formulation rather than in the optimiser.
+properties of the instrumentation, not of constrained RL. Correcting them does
+not make the method competitive here, nor deterministic deployment feasible. What
+the study offers is a measured account of where a constrained pipeline comes
+apart, the diagnostics that expose each break, and evidence that the residual
+result is driven by the formulation rather than by any failure of the optimiser
+to pursue it.
 
 ## 2. Related work
 
 ### 2.1 Reinforcement learning and dispatching rules in production control
 
-The two systematic reviews cited above map a field that has shifted from
-value-based methods to policy gradients, with PPO dominant, and that repeatedly
-reports strong performance against weak baselines and ambiguous performance
-against well-tuned heuristics. Recent flow-shop work has converged on
-graph-based architectures trained with PPO [@li2025evolutionary; @liu2025gat;
-@shen2026transformer; @wang2025end]. An alternative to soft penalties is action
-masking, which zeroes infeasible actions in the policy distribution
-[@ali2023masked; @tang2020mask; @zhang2025dual]; masking presupposes that some
-actions are infeasible, which does not apply in the fully feasible routing
-problem studied here. A parallel line bypasses RL and evolves interpretable
-dispatching rules directly [@ferreira2022dispatching; @huang2025evolving;
-@marques2025dynamic].
-
-On the benchmarking problem itself, Doherty and colleagues [@doherty2025hype]
-reproduce five landmark RL studies in optical resource allocation, apply properly
-tuned heuristic baselines, and find that simple heuristics consistently match or
-outperform the published results. On the two testbeds used here, Alrashdan
+The two reviews cited above map a field that has shifted from value-based methods
+to policy gradients, with PPO dominant, and that repeatedly reports strong
+performance against weak baselines and ambiguous performance against well-tuned
+heuristics. Recent flow-shop work has converged on graph-based architectures
+trained with PPO [@li2025evolutionary; @liu2025gat; @shen2026transformer;
+@wang2025end]. An alternative to soft penalties is action masking
+[@ali2023masked; @tang2020mask; @zhang2025dual], which presupposes infeasible
+actions and so does not apply to the fully feasible routing problem studied here;
+a parallel line bypasses RL and evolves interpretable dispatching rules directly
+[@ferreira2022dispatching; @huang2025evolving; @marques2025dynamic]. On
+benchmarking itself, Doherty and colleagues [@doherty2025hype] reproduce five
+landmark RL studies in optical resource allocation with properly tuned heuristic
+baselines and find that simple heuristics consistently match or outperform the
+published results. On the two testbeds used here, Alrashdan
 [@alrashdan2026breakdowns] benchmarked dispatching rules, Thompson-sampling
-bandits and unconstrained PPO under machine breakdowns of varying severity, and
-found ShortestQueue ahead of PPO on cost per unit by 38–153% depending on the
-disruption level, with a corrected training protocol narrowing the gap without
-closing it; that study addressed neither constraints nor evaluation mode, which
-are the subject here. Rinciog and Meyer [@rinciog2021fabricatio] introduced
-FabricatioRL, the closest comparator to the simulator used in this work.
+bandits and unconstrained PPO under machine breakdowns, finding ShortestQueue
+ahead of PPO on cost per unit by 38–153% depending on disruption level; that
+study addressed neither constraints nor evaluation mode. Rinciog and Meyer
+[@rinciog2021fabricatio] introduced FabricatioRL, the closest comparator to the
+simulator used here.
 
 ### 2.2 Constrained MDPs, Lagrangian methods and evaluation practice
 
 The constrained Markov decision process (CMDP) formulation is due to Altman
-[@altman1999cmdp], who shows that for a finite CMDP with K constraints under
-discounted cost there is an optimal stationary policy requiring at most K
-randomisations, and notes more generally that optimal constrained policies
-require randomisation or time-sharing between deterministic policies. Those
-results are stated for a setting different from ours, which is finite-horizon
-and uses function approximation; they are used here to motivate reporting
-stochastic as well as greedy evaluation, not to explain the learned policies.
-The modern policy-gradient pipeline begins with Constrained Policy Optimization
+[@altman1999cmdp], who shows that a finite CMDP with K constraints under
+discounted cost admits an optimal stationary policy requiring at most K
+randomisations, and that optimal constrained policies generally require
+randomisation or time-sharing between deterministic policies. Those results are
+stated for a setting different from ours, which is finite-horizon and uses
+function approximation; they are used here to motivate reporting stochastic as
+well as greedy evaluation, not to explain the learned policies. The modern
+policy-gradient pipeline begins with Constrained Policy Optimization
 [@achiam2017cpo]; Reward Constrained Policy Optimization [@tessler2019rcpo]
 introduces the multi-timescale Lagrangian approach used here, and Paternain and
-colleagues [@paternain2019duality] prove a zero duality gap that underwrites
+colleagues [@paternain2019duality] prove a zero duality gap underwriting
 primal-dual methods despite the non-convexity of policy optimisation. Stooke and
 colleagues [@stooke2020pid] are the closest methodological precedent: the
 standard Lagrangian update behaves as integral control on the violation signal,
-producing oscillation and overshoot, and a PID controller on the multiplier damps
-it.
+producing oscillation and overshoot, which a PID controller on the multiplier
+damps.
 
-That literature analyses dual dynamics given a constraint signal. It has
-comparatively little to say about whether the signal fed to the dual update is
-the constraint the paper claims to impose, which is the gap this study occupies.
-On the evaluation side, Henderson and colleagues [@henderson2018matters] showed
-that reported deep-RL results are sensitive to protocol choices that are rarely
-stated, and Agarwal and colleagues [@agarwal2021precipice] showed that point
-estimates over a handful of runs routinely misstate both the level and the
-uncertainty of performance. Whether a stochastic policy is evaluated by sampling
-or by its mode is one such choice, usually left to a library default; for a
-near-uniform policy the two modes measure different objects, and this paper is an
-extended example of the consequence.
+That literature analyses dual dynamics given a constraint signal, and has little
+to say about whether the signal fed to the dual update is the constraint the
+paper claims to impose, which is the gap this study occupies. On the evaluation
+side, Henderson and colleagues [@henderson2018matters] showed that reported
+deep-RL results are sensitive to protocol choices that are rarely stated, and
+Agarwal and colleagues [@agarwal2021precipice] that point estimates over a
+handful of runs routinely misstate both the level and the uncertainty of
+performance. Whether a stochastic policy is evaluated by sampling or by its mode
+is one such choice, usually left to a library default; for a near-uniform policy
+the two modes measure different objects, and this paper is an extended example of
+the consequence.
 
 ## 3. Problem formulation and testbeds
 
 ### 3.1 Flow-shop model
 
 The simulator represents a flow shop of N stages, stage s holding m_s parallel
-servers that differ in service-time distribution and cost rate. Jobs arrive at
-the first stage as a Poisson process and pass through the stages in order;
-service times are exponential with stage- and server-specific rates. Cost accrues
-on three counts: a processing rate while a server is busy, an idle rate while it
-is not, and a waiting rate per queued job. An episode represents one shift of
-H = 480 one-minute steps.
+servers differing in service-time distribution and cost rate, with Poisson
+arrivals and exponential, server-specific service times. Cost accrues at
+per-server processing and idle rates and a per-job waiting rate; an episode is
+one shift, H = 480 one-minute steps. Actions are complete downstream routes
+rather than per-stage assignments, tuples a = (a₁, …, a_N) from a space of size
+∏_s m_s. The observation holds queue lengths, in-service indicators and
+accumulated cost signals, but not the dual multipliers.
 
-A routing decision assigns an arriving job its complete downstream route rather
-than one stage at a time, so an action is a tuple a = (a₁, …, a_N) drawn from a
-space of size ∏_s m_s. This centralised formulation simplifies credit assignment
-relative to a per-stage MDP at the cost of an action space that grows
-multiplicatively with stage count. The observation concatenates stage queue
-lengths, per-server in-service indicators and accumulated cost signals; it does
-not contain the dual multipliers, since the Lagrangian wrapper modifies the
-reward and leaves the observation untouched.
-
-Two instances are used. The bakery testbed has two stages of two servers, giving
-4 routes, with each stage pairing a fast expensive machine against a slow cheap
-one and service times calibrated to the BK50 subset of a published bakery
-production dataset [@babor2022bakery]. The electronics testbed has three stages
-of 2, 3 and 2 servers, giving 12 routes, with asymmetric capacities and one
-structurally over-provisioned station. Full machine-level specifications are in
-the simulator configuration files of the companion repository
-[@flexflowsimcppo] and in the study that introduced these instances
-[@alrashdan2026breakdowns]; the present work uses them without that study's
-breakdown extensions. The constrained fast servers are the fast machine of each
-of the first two stages, written F_fast, with throughput floor T_min = 18
-(bakery) or 50 (electronics) and utilisation floor U_min = 0.50. The
-over-provisioned electronics station is excluded from F_fast because the
-LeastUtilised rule itself reaches only 42% utilisation there, so a 0.50 floor
+The bakery testbed has two stages of two servers, giving 4 routes, each pairing a
+fast expensive machine with a slow cheap one, service times calibrated to the
+BK50 subset of a bakery dataset [@babor2022bakery]. The electronics testbed has
+three stages of 2, 3 and 2 servers, giving 12 routes, with asymmetric capacities
+and one over-provisioned station; machine specifications are in
+[@flexflowsimcppo] and [@alrashdan2026breakdowns], whose breakdown extensions are
+unused here. The constrained servers F_fast are the fast machines of the first
+two stages, with throughput floor T_min = 18 (bakery) or T_min = 50 (electronics)
+and utilisation floor U_min = 0.50. The over-provisioned station is excluded
+because LeastUtilised itself reaches only 42% utilisation there, so a 0.50 floor
 would be infeasible for any policy.
 
 ### 3.2 Reward and the conservative routing attractor
 
-Let c_t be the cost accrued in step t, summed over servers, and C(τ) = Σ_t c_t
-the episode total. The environment reward is the scalarised per-step signal of
-Eq. (1), transcribed from the implementation,
+With c_t the step-t cost summed over servers and C(τ) = Σ_t c_t the episode total,
+the implemented environment reward is Eq. (1),
 
 $$r_t = \kappa\left(-\,w_c\,\frac{c_t}{C_{\mathrm{norm}}} + w_t\,\frac{\dot n_t\,\Delta t}{N_{\mathrm{norm}}} - w_w\,\frac{W_t\,\Delta t}{W_{\mathrm{norm}}}\right)\qquad(1)$$
 
 with weights (w_c, w_t, w_w) summing to one, κ = 10, Δt = 1 min, W_t the work in
-process and (C_norm, N_norm, W_norm) fixed normalisation constants, (2740, 20,
-3220) on bakery and (4230, 55, 5100) on electronics, chosen as typical episode
-totals so each term is of order one per episode. Here ṅ_t is the cumulative
-average throughput rate d_t / t, with d_t the departures up to step t, not an
-instantaneous rate; the distinction matters in Section 4.2. Under the cost-only
-weights (1, 0, 0) the episode return is −κ C(τ)/C_norm, proportional to total
-cost, so the objective of Eq. (2) is optimised without approximation.
-
-For w_c near unity, PPO solves the problem it was given and idles expensive
-servers. Cost falls, throughput falls further, and cost per unit rises above that
-of any dispatching rule. Sweeping w_c down to 0.5 does not escape this
-attractor. Constraining the problem is the natural response, and is what the
-remainder of the paper examines.
+process and normalisation constants (C_norm, N_norm, W_norm) = (2740, 20, 3220)
+on bakery and (4230, 55, 5100) on electronics, typical episode totals making each
+term of order one per episode. Here ṅ_t is the cumulative average rate d_t / t,
+not an instantaneous one, which matters in Section 4.2. Under the cost-only
+weights (1, 0, 0) the episode return is −κ C(τ)/C_norm, so the objective of
+Eq. (2) is optimised without approximation. For w_c near unity PPO idles
+expensive servers, as that objective directs: cost falls, throughput falls
+further, and cost per unit rises above every load-spreading dispatching rule. A
+sweep of w_c to 0.5 in the initial study did not escape this attractor;
+constraining the problem is the natural response.
 
 ### 3.3 Constrained formulation and three constraint objects
 
-Write TP(τ) for departures in episode τ and u_i(τ) for the realised utilisation
-of server i. The agent is posed the problem of Eq. (2),
+With TP(τ) the episode departures and u_i(τ) server i's realised utilisation, the
+agent is posed Eq. (2),
 
 $$\max_{\pi}\; \mathbb{E}_\pi\!\left[-C(\tau)\right] \quad \text{s.t.}\quad \mathbb{E}_\pi[\mathrm{TP}(\tau)] \ge T_{\min},\quad \mathbb{E}_\pi[u_i(\tau)] \ge U_{\min}\;\; \forall\, i \in F_{\mathrm{fast}}\qquad(2)$$
 
-Three distinct constraint objects appear in this study, and much of what follows
-turns on the differences between them. The first is the expectation constraint of
-Eq. (2), the problem stated. The second is the training surrogate: the primal
-update penalises the exact per-episode Lagrangian of Eq. (2), but the dual update
-reads a hinged per-episode shortfall, max(0, T_min − TP(τ)), rather than the
-signed slack, so the multipliers respond to the frequency and depth of violations
-rather than to the expected constraint value. The third is the selection and
-reporting criterion: a checkpoint qualifies if each constraint holds on at least
-16 of 20 validation episodes, and results report the fraction of test episodes on
-which both hold. Selection therefore imposes two per-episode chance constraints,
-P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8, while reporting measures
-the joint event. For per-episode distributions as nearly symmetric as those
-observed here both are stricter than Eq. (2), and the joint event is stricter
-again; Section 6.7 exhibits a configuration that satisfies Eq. (2) and both
-chance constraints while failing the joint criterion. The initial study treated the three as
-interchangeable; Section 4.2 shows that what it implemented in training was in
-fact a fourth object coinciding with none of them.
+Three distinct constraint objects appear. The first is Eq. (2) itself, the problem
+as stated. The second is the training surrogate: the primal update penalises the
+exact per-episode Lagrangian of Eq. (2), but the dual update reads a hinged
+shortfall, max(0, T_min − TP(τ)), not the signed slack, so the multipliers track
+violation frequency and depth, not expected constraint value. The third is the
+selection and reporting criterion: a checkpoint qualifies if each constraint
+holds on at least 16 of 20 validation episodes, that is, under chance constraints
+P(TP(τ) ≥ T_min) ≥ 0.8 and P(min_i u_i(τ) ≥ U_min) ≥ 0.8, while results report
+the fraction of test episodes satisfying both, stricter again; for per-episode
+distributions as nearly symmetric as those observed here, both chance constraints
+are stricter than Eq. (2). Section 6.7 exhibits a configuration satisfying
+Eq. (2) and both chance constraints yet failing the joint criterion. The initial
+study treated the three as interchangeable; Section 4.2 shows that what it
+trained on was a fourth object coinciding with none.
 
 ### 3.4 The objective is not the reported metric
 
-The headline metric in this literature is cost per unit, computed here as the
-per-episode ratio C(τ)/TP(τ) averaged over episodes, whereas the CMDP objective
-of Eq. (2) minimises expected total cost subject to a throughput floor. The two
-differ, and on these testbeds they diverge in a direction that matters.
-Interpolating between the mean cost and mean throughput of the CostMinimising and
-ShortestQueue baselines on bakery gives a marginal cost of about $40 per
-additional unit against an average of about $139, which makes cost per unit
-decreasing in throughput across the operating range. A total-cost minimiser then
-has every incentive to sit at the throughput floor, where the interpolated cost
-per unit of approximately $151 is worse than ShortestQueue's $138.66. This is a
-two-point argument, presented here as motivation; Section 6.7 measures the same
-divergence directly across the seven load-spreading policies of the study, by
-which is meant the four dispatching rules of Table 1 that distribute work across
-routes and the three learned cells, excluding CostMinimising and FastServerFirst,
-which concentrate it.
+The headline metric is cost per unit, the per-episode ratio C(τ)/TP(τ), whereas
+Eq. (2) minimises expected total cost subject to a throughput floor; here the two
+diverge in a direction that matters. Interpolating between the mean cost and
+throughput of CostMinimising and ShortestQueue on bakery gives a marginal cost of
+about $40 per additional unit against an average of about $139, so cost per unit
+falls with throughput across the operating range and a total-cost minimiser has
+every incentive to sit at the floor, where the interpolated $151 is worse than
+ShortestQueue's $138.66. This two-point argument is motivation only; Section 6.7
+measures it directly across the study's seven load-spreading policies: the four
+rules of Table 1 that spread work across routes and the three learned cells, but
+not CostMinimising or FastServerFirst, which concentrate it.
 
-Its consequence is that any apparent success of a constrained agent on cost per
-unit must be delivered by something other than the objective. In the initial
-study the candidate is the checkpoint-selection rule: requiring at least 16 of 20
-validation episodes to satisfy TP ≥ 18, with a per-episode standard deviation of
-about 2.0 units, implies a mean throughput near 19.7, an effective floor above
-the nominal 18 though less than one standard deviation above it.
+Any apparent success on cost per unit must therefore come from elsewhere; in the
+initial study the candidate is the selection rule: requiring 16 of 20 validation
+episodes to satisfy TP ≥ 18, at a per-episode standard deviation of about 2.0
+units, implies a mean throughput near 19.7, an effective floor above the nominal
+18 though less than one standard deviation above it.
 
 ## 4. Constrained method and its implementation
 
 ### 4.1 Lagrangian PPO
 
-The constrained problem is solved with PPO as the inner loop and a Gymnasium
-wrapper that augments the per-step reward with penalties, as in Eq. (3),
+PPO is the inner loop; a Gymnasium wrapper augments the per-step reward with
+penalties, as in Eq. (3),
 
 $$\tilde r_t = r_t - \lambda_U\, g_{U,t} - \lambda_T\, g_{T,t}\qquad(3)$$
 
-where r_t is the environment reward of Eq. (1) rather than the bare cost term.
-The initial study posed the problem as single-objective cost minimisation, but
-every constrained variant it ran augmented the shaped reward with weights
-(0.8, 0.1, 0.1) active. An ablation isolating the shaping terms (Appendix B,
-Table B1) finds no resolvable effect under the bootstrap of Section 6.1, but the discrepancy
-between the problem posed and the reward implemented is recorded here as the
-first instance of the chain breaking.
+where r_t is the environment reward of Eq. (1), not the bare cost term. The
+initial study posed single-objective cost minimisation, yet every constrained
+variant kept the shaping weights (0.8, 0.1, 0.1) active. An ablation isolating
+them (Appendix B, Table B1) finds no resolvable effect under the Section 6.1
+bootstrap, but the discrepancy is the first break in the chain.
 
 ### 4.2 The cumulative-rate slack and why it saturates any multiplier
 
-The dual variables are updated from a slack signal g. The initial implementation
-used, at every step after a 100-step warm-up, the signal of Eq. (4),
+Dual variables are updated from a slack signal g, initially Eq. (4), at every
+step after a 100-step warm-up,
 
 $$g_{T,t} = \max\!\left(0,\; \frac{T_{\min}}{H} - \frac{d_t}{t}\right)\qquad(4)$$
 
-with d_t the cumulative departures up to step t. This is not the constraint of
-Eq. (2): it compares a cumulative average rate against the floor at every
-instant. In a flow shop whose flow time is a sizeable fraction of the horizon the
-cumulative rate lies below the floor for a long prefix of every episode whatever
-the policy does, because the line is filling. Measured under ShortestQueue over
-the 50 test episodes, the cumulative rate first reaches its floor at a median
-step of 184 on bakery and 194 on electronics, ranging from 100 to 434 and from
-101 to 399 across episodes, and it remains below the floor on 45% of post-warm-up
-steps on bakery and 31% on electronics. A policy achieving exactly TP = 50 on
-electronics, which meets the stated constraint, does not cross until t ≈ 480 and
-so never satisfies the training signal within the horizon. The utilisation slack
-was defined analogously, with the same fill-phase bias in milder form.
+with d_t the cumulative departures to step t. This is not the constraint of
+Eq. (2): where flow time is a sizeable fraction of the horizon, the filling line
+holds the cumulative rate below the floor for a long prefix of every episode
+whatever the policy does. Under ShortestQueue over the 50 test episodes it first
+reaches the floor at a median step of 184 (bakery, range 100 to 434) and 194
+(electronics, 101 to 399), staying below on 45% and 31% of post-warm-up steps. A
+policy achieving exactly TP = 50 on electronics meets the constraint but does not
+cross until t ≈ 480, never satisfying the training signal within the horizon. The
+utilisation slack carried the same bias in milder form.
 
-The one-sided dual update of Eq. (5), applied once per episode with the mean
-taken over the post-warm-up steps,
+The one-sided dual update of Eq. (5), applied once per episode with the
+post-warm-up mean,
 
 $$\lambda \leftarrow \operatorname{clip}\!\left(\lambda + \eta\,\operatorname{mean}_t\, g_t,\; 0,\; \lambda_{\max}\right)\qquad(5)$$
 
-is a violation-driven ratchet with monotone growth rather than a dual ascent, and
-it turns that bias into a structural outcome. Averaged over the 50 test episodes,
-the mean per-step g_T under ShortestQueue is 0.0031 on bakery and 0.0054 on
-electronics; at η_T = 4000 these are per-episode increments of 12.5 and 21.6,
-against the 6.30 and 5.91 needed to carry λ_T from its initial value of 200 to
-its cap of 20,000 within the 3,142 and 3,352 training episodes of the two
-budgets. Any policy whose mean slack exceeds 0.0016 per step therefore saturates
-the multiplier within the budget, and the oracle's exceeds it by a factor of two,
-reaching the cap at episode 1,581 of 3,142 on bakery and 915 of 3,352 on
-electronics. The policies actually trained saturate sooner, at increments of
-15–16 and 39–49 per episode and at episodes 1,223–1,359 (39–43% of training) and
-402–504 (12–15%), which is what Section 6.1 observes. Saturation therefore
-reflects the signal, not the policy, and reporting it as evidence about the
-method is a category error.
+is a violation-driven ratchet rather than a dual ascent, turning that bias into a
+structural outcome. Over the same episodes, the mean per-step g_T under
+ShortestQueue is 0.0031 (bakery) and 0.0054 (electronics); at η_T = 4000 that is
+12.5 and 21.6 per episode against the 6.30 and 5.91 needed to carry λ_T from 200
+to its cap of 20,000 within the 3,142 and 3,352 training episodes, so any mean
+slack above 0.0016 per step saturates the multiplier within budget. The oracle's
+exceeds it by a factor of two, capping at episode 1,581 of 3,142 on bakery and
+915 of 3,352 on electronics; the trained policies saturate sooner, at increments
+of 15–16 and 39–49, and at episodes 1,223–1,359 (39–43% of training) and 402–504
+(12–15%). Saturation reflects the signal, not the policy; reporting it as
+evidence about the method is a category error.
 
 ### 4.3 Episode-level slack and the corrected dual updates
 
-The per-step signal is replaced by the signed pro-rata decomposition of the
-episode Lagrangian, Eq. (6),
+The per-step signal becomes the signed pro-rata decomposition of the episode
+Lagrangian, Eq. (6),
 
 $$p_t = \lambda_T\left(\frac{T_{\min}}{H} - \delta_t\right) + \lambda_U \sum_{i\in F_{\mathrm{fast}}}\left(U_{\min} - b_{i,t}\right)\qquad(6)$$
 
-where δ_t is the number of departures in step t and b_{i,t} ∈ {0, 1} indicates
-whether server i is in service at step t. The augmented reward is r̃_t = r_t − p_t
-at every step, with no warm-up. Summed over the episode, Eq. (6) telescopes to
-Eq. (7),
+with δ_t the departures in step t and b_{i,t} ∈ {0, 1} indicating whether server i
+is busy; the augmented reward is r̃_t = r_t − p_t, with no warm-up. Over the
+episode, Eq. (6) telescopes to Eq. (7),
 
 $$\sum_{t=0}^{H-1} p_t = \lambda_T\left(T_{\min} - \mathrm{TP}(\tau)\right) + \lambda_U\, H \sum_{i\in F_{\mathrm{fast}}}\left(U_{\min} - \bar u_i(\tau)\right)\qquad(7)$$
 
-the Lagrangian penalty corresponding to the expectation constraint of Eq. (2),
-expressed in the same episode-level quantities that validation and test evaluate.
-There is no fill-phase bias: an action's contribution depends only on the
-departures and busy time it causes. Multipliers are updated once per episode from
-the hinged episode-level slack of Eqs. (8) and (9),
+the Lagrangian penalty for the expectation constraint of Eq. (2), in the same
+episode-level quantities that validation and test evaluate, and free of
+fill-phase bias. Multipliers update once per episode from the hinged
+episode-level slack of Eqs. (8) and (9),
 
 $$\lambda_T \leftarrow \operatorname{clip}\!\left(\lambda_T + \eta_T\,\frac{\max\!\left(0,\; T_{\min} - \mathrm{TP}(\tau)\right)}{H},\; 0,\; \lambda_{T,\max}\right)\qquad(8)$$
 
 $$\lambda_U \leftarrow \operatorname{clip}\!\left(\lambda_U + \eta_U \sum_{i\in F_{\mathrm{fast}}} \max\!\left(0,\; U_{\min} - \bar u_i(\tau)\right),\; 0,\; \lambda_{U,\max}\right)\qquad(9)$$
 
-The division by H keeps the throughput slack in the per-step rate units of
-Eq. (4), so η_T, λ_T's initial value and its cap carry over unchanged and the
-comparison with the original signal is like for like. Under Eqs. (8) and (9) the
-ratchet advances only on episodes that violate, so saturation is no longer
-guaranteed for an oracle, which is the property tested in Section 6.1.
+Dividing by H keeps the throughput slack in the per-step rate units of Eq. (4),
+so η_T, λ_T's initial value and cap carry over unchanged. The ratchet advances
+only on violating episodes, so saturation is no longer guaranteed for an oracle
+(Section 6.1).
 
-Two consequences of retaining the hinge should be stated at the outset. The
-update remains monotone, so a multiplier never decreases and cannot return toward
-zero once its constraint is slack; and under a stochastic policy that violates on
-a persistent fraction of episodes it continues to grow at a rate set by the
-violation frequency rather than by the expected slack. Eqs. (8) and (9) remove
-the guaranteed divergence of Eq. (4), not the monotonicity. A symmetric variant
-uses the signed slack (T_min − TP(τ))/H in Eq. (8) and, in Eq. (9), the summed
-shortfall when any constrained server violates and the negative margin of the
-binding server otherwise, so that a multiplier can fall back toward zero. Section
-6.4 shows why the scale of the multipliers matters as much as the hinge, and
-Section 6.7 reports the symmetric variant at full budget with multipliers on the
-scale of the reward.
+Retaining the hinge keeps the update monotone: Eqs. (8) and (9) remove the
+guaranteed divergence of Eq. (4), not the monotonicity, and under a stochastic
+policy violating on a persistent fraction of episodes the multiplier grows at a
+rate set by violation frequency, not expected slack. A symmetric variant uses the
+signed slack (T_min − TP(τ))/H in Eq. (8) and, in Eq. (9), the summed shortfall
+when any constrained server violates and the binding server's negative margin
+otherwise, letting a multiplier fall back toward zero. Section 6.4 shows why
+multiplier scale matters as much as the hinge; Section 6.7 reports that variant
+at full budget.
 
 ### 4.4 Evaluation of a stochastic policy
 
-The initial protocol evaluated policies greedily. PPO optimises a stochastic
-policy, and for a constrained problem the optimum may itself be randomised
-(Section 2.2); more immediately, if the learned distribution is close to uniform
-then its greedy action is selected by small and unstable differences in logits,
-and evaluating it measures those differences rather than the policy. Both
-evaluation modes are therefore computed and reported throughout, checkpoints are
-selected under the same mode in which results are reported, and Section 6.5
-measures directly how far the learned distributions are from uniform and how
-stable their greedy action is to seed and to perturbation. This is described as
-an evaluation-mode mismatch rather than an error: greedy evaluation is a
-legitimate choice when the deployment target is a deterministic controller
-(Section 7.3), and the problem is reporting it for a near-uniform policy without
-saying so.
+The initial protocol evaluated policies greedily, but PPO optimises a stochastic
+policy, and a constrained optimum may itself be randomised (Section 2.2); more
+immediately, a near-uniform distribution's greedy action turns on small, unstable
+logit differences, so evaluating it measures those rather than the policy. Both
+modes are computed and reported throughout, checkpoints selected under the
+reported mode; Section 6.5 measures the distance from uniform and the stability
+of the greedy action to seed and perturbation. This is described as an
+evaluation-mode mismatch, not an error: greedy evaluation is legitimate for a
+deterministic deployment target (Section 7.3); the problem is reporting it for a
+near-uniform policy without saying so.
 
 ## 5. Experimental protocol
 
 ### 5.1 Baselines
 
-Six dispatching rules are evaluated on the 50 test episodes (Table 1). Four are
-state-aware: ShortestQueue minimises summed instantaneous load across the full
-route; LeastUtilised weights each server's load by its mean service time;
-CostMinimising minimises summed processing cost per unit time, ignoring queue
-state; FastServerFirst always takes the fastest server at each stage. Two are
-stateless and are included because the learned policies turn out to resemble
-them (Section 6.5): UniformRandom draws a route uniformly at each arrival, and
-RoundRobin cycles through routes in order. ShortestQueue has the lowest cost per
-unit on electronics while satisfying both constraints on every test episode, and
-is the primary comparator; on bakery it is not separable from RoundRobin, whose
-mean is $1.11 lower with heavily overlapping intervals.
+Six dispatching rules are evaluated on the 50 test episodes (Table 1). Four
+are state-aware: ShortestQueue minimises summed instantaneous load over the
+route; LeastUtilised, that load weighted by mean service time; CostMinimising,
+summed processing cost per unit time, ignoring queues; and FastServerFirst
+takes the fastest server at each stage. Two are stateless and resemble the
+learned policies (Section 6.5): UniformRandom draws a route uniformly at each
+arrival, RoundRobin cycles through routes in order. ShortestQueue, the primary
+comparator, is cheapest per unit on electronics with both constraints
+satisfied on every test episode; on bakery it is not separable from
+RoundRobin, whose mean is $1.11 lower with heavily overlapping intervals.
 
 **Table 1.** Dispatching baselines, mean ± 95% confidence interval (CI) over 50
 test episodes. Joint sat. is the fraction of episodes satisfying both constraints.
@@ -431,93 +376,71 @@ test episodes. Joint sat. is the fraction of episodes satisfying both constraint
 | Electronics, RoundRobin | 55.10 ± 1.08 | $78.90 ± 1.54 | 92% | 88% | 86% |
 | Electronics, UniformRandom | 54.40 ± 1.22 | $79.91 ± 2.20 | 84% | 88% | 78% |
 
-F_fast and U_min are identified from a one-shot LeastUtilised run on each
-testbed. This anchors the feasible region on the heuristic family the agent is
-compared against, and Table 1 shows the consequence: at these thresholds even
-stateless routing satisfies both constraints on 78–90% of episodes, so the
-constraints are not demanding. Section 6.6 reports how the ordering changes when
-they are tightened.
+F_fast and U_min come from a one-shot LeastUtilised run on each testbed,
+anchoring the feasible region on the heuristic family the agent is compared
+against. Even stateless routing then satisfies both constraints on 78–90% of
+episodes (Table 1), so the constraints are not demanding; Section 6.6 reports
+how tightening them changes the ordering.
 
 ### 5.2 Training, selection and statistical treatment
 
 Five seeds committed in advance [42, 7, 2024, 123, 999]; 1.6M timesteps on
 electronics and 1.5M on bakery; checkpoints every 100K. Validation uses seeds
-[10000, 10020) and test uses seeds [11000, 11050), both disjoint from training.
-Among checkpoints satisfying each constraint on at least 16 of 20 validation
-episodes, the one with the lowest mean cost per unit is selected; if none
-qualifies, the lowest mean cost per unit overall is selected and the run is
-marked as a fallback. Cost per unit is computed per episode and averaged.
-Confidence intervals across seeds are 95% two-sided t-intervals; those in Table 1
-are across episodes, so the two are not directly comparable. PPO is the
-Stable-Baselines3 implementation [@raffin2021sb3] with the hyperparameters of the
-initial study, listed with the dual parameters in Appendix A.
+[10000, 10020), test seeds [11000, 11050), both disjoint from training.
+Selection takes the lowest mean cost per unit among checkpoints satisfying
+each constraint on at least 16 of 20 validation episodes, or the lowest
+overall if none qualifies, with the run marked a fallback. Cost per unit is
+computed per episode and averaged. Confidence intervals across seeds are 95%
+two-sided t-intervals; those in Table 1, across episodes, are not directly
+comparable. PPO is the Stable-Baselines3 implementation [@raffin2021sb3] with
+the initial study's hyperparameters, listed with the dual parameters in
+Appendix A.
 
-Three protocol documents govern the runs and are in the repository. The first is
-the protocol committed before the initial study. The second, committed before any
-full-budget run reported here, requires both evaluation modes to be computed and
-reported for every checkpoint and every test, moves checkpoint selection onto the
-stochastic validation episodes so that selection and reporting share a criterion,
-and records the segmentation of full-budget training into 400K-step blocks
-carrying policy, optimiser and dual state across boundaries. The third, committed
-before the runs of Section 6.7, defines the symmetric reward-scaled cell, fixes
-its multiplier scales a priori, lists the comparisons to be reported and states
-the three possible outcomes with the wording each would receive; no
-hyperparameter of that cell was changed after results were seen. Two defects in
-the pipeline are recorded as a single deviation. First, the second document
-specified seeded action sampling and the training pipeline sampled from an
-unseeded generator, so every stochastic test figure reported here is a seeded
-re-evaluation of the selected checkpoints with per-episode records archived.
-Second, the pipeline aggregated joint satisfaction across seeds as the smaller of
-the two mean marginal rates, which is an upper bound on the per-episode joint
-rate rather than that rate, so every joint-satisfaction figure reported here is
-recomputed per episode from the archived records. Greedy cost per unit is
-unaffected by either defect and reproduces the pipeline's values to the cent,
-which serves as the fidelity check; greedy joint satisfaction moves by at most
-1.2 percentage points under the second correction, the two stochastic draws
-differ by at most $1.2 per unit and 5.6 percentage points at cell level, and no
-comparison changes direction. Where the seeded and unseeded draws differ most,
-the correction of Section 6.2 is worth 19 rather than 25 percentage points of
-joint satisfaction.
+Three protocol documents in the repository govern the runs: the initial
+study's protocol; an amendment, committed before any full-budget run here,
+requiring both evaluation modes for every checkpoint and selection on the
+stochastic validation episodes; and a second, committed before the runs of
+Section 6.7, fixing that cell's multiplier scales a priori and listing the
+comparisons and the wording each of three outcomes would receive. Two pipeline
+defects are recorded as one deviation: unseeded action sampling, and joint
+satisfaction aggregated across seeds as the smaller mean marginal rate rather
+than the per-episode joint rate. Every stochastic figure here is therefore a
+seeded re-evaluation of the selected checkpoints, every joint-satisfaction
+figure a per-episode recomputation from archived records; Appendix A.5 gives
+each correction's size, none of which changes the direction of any comparison.
 
-Comparisons in Section 6.2 use a paired hierarchical bootstrap on the per-episode
-test records, resampling training seeds with replacement within each learned cell
-and test episodes with replacement jointly across the policies being compared, so
-that a learned policy and a baseline are always scored on the same resampled
-episodes. This replaces one-sample tests against baseline means, which treat
-those means as known constants and overstate the evidence. Ten tests form the
-pre-specified family on each testbed and are adjusted by the Holm procedure at
-α = 0.05; the cell of Section 6.7 forms its own family of twelve.
+Comparisons in Section 6.2 use a paired hierarchical bootstrap on the
+per-episode test records, resampling training seeds within each learned cell
+and test episodes jointly across the policies compared. This replaces
+one-sample tests that treat baseline means as known constants and overstate
+the evidence. Ten tests form the pre-specified family on each testbed,
+adjusted by Holm at α = 0.05; the cell of Section 6.7 forms its own family of
+twelve.
 
 ## 6. Results
 
 ### 6.1 Multiplier saturation is a property of the slack signal
 
-A 2×2 design crossing the base reward {shaped, cost-only} with the slack signal
-{cumulative-rate, episode-level}, five seeds per cell at a reduced budget of 400K
-steps on electronics, attributes saturation unambiguously (Appendix B, Table B1).
-All ten seeds trained with the cumulative-rate signal end at the λ_T cap of
-20,000; all ten trained with the episode-level signal end between 908 and 2,833,
-an order of magnitude lower. There is no overlap and no exception at the seed
-level. The base reward has no resolvable effect in either arm: under the paired
-bootstrap of Section 5.2, holding the slack signal fixed, replacing the shaped
-reward with the cost-only reward moves stochastic cost per unit by +$1.93
-[−0.42, +4.06] under the cumulative-rate signal and −$0.22 [−2.07, +1.47] under
-the episode-level signal, and joint satisfaction by −11.6 [−32.4, +8.0] and
-+0.8 [−6.4, +8.0] percentage points. The discrepancy noted in Section 4.1 is
-therefore a documentation matter rather than a driver of the result, although the
-first of those intervals is wide enough that a moderate effect under the
-saturated signal cannot be excluded at five seeds.
+A 2×2 design crossing base reward {shaped, cost-only} with slack signal
+{cumulative-rate, episode-level}, five seeds per cell at a reduced 400K-step
+budget on electronics, attributes saturation unambiguously (Appendix B,
+Table B1). All ten cumulative-rate seeds end at the λ_T cap of 20,000, all ten
+episode-level seeds between 908 and 2,833: no overlap, no seed-level exception.
+Base reward has no resolvable effect in either arm: under the paired bootstrap of
+Section 5.2, slack held fixed, the cost-only reward moves stochastic cost per
+unit by +$1.93 [−0.42, +4.06] (cumulative-rate) and −$0.22 [−2.07, +1.47]
+(episode-level), and joint satisfaction by −11.6 [−32.4, +8.0] and
++0.8 [−6.4, +8.0] percentage points. The Section 4.1 discrepancy is therefore
+documentation, not a driver, though the first interval is wide enough that a
+moderate saturated-signal effect cannot be excluded at five seeds.
 
 The pattern holds at full budget on both testbeds (Figure 1). Under the
 cumulative-rate signal the multiplier ramps monotonically to its cap on every
-seed, at 0.19–0.24M steps on electronics and 0.59–0.65M on bakery, and is flat
-thereafter; the difference in saturation time is what Section 4.2 predicts, since
-the fill-phase gap is larger where flow time is a larger fraction of the horizon
-and the floor sits closer to the achievable rate. Under the episode-level signal
-the multiplier rises slowly, advancing only on episodes that violate, and ends
-between 2,525 and 7,858, never within a factor of 2.5 of the cap. It does not
-saturate, but neither has it converged, which is the monotonicity anticipated in
-Section 4.3.
+seed, at 0.19–0.24M steps on electronics and 0.59–0.65M on bakery, then is flat,
+as Section 4.2 predicts. Under the episode-level signal it advances only on
+violating episodes, ending between 2,525 and 7,858, never within a factor of 2.5
+of the cap: it does not saturate, but neither has it converged — the monotonicity
+of Section 4.3.
 
 ![](fig_lambda_T.png){width=16cm}\
 
@@ -527,11 +450,10 @@ Lower traces: the episode-level slack of Eqs. (8) and (9).
 
 ### 6.2 Full-budget comparison
 
-Two cells were run at the full budget: the original implementation (shaped
-reward, cumulative-rate slack) as control, and the corrected formulation of
-Section 4.3 (cost-only reward, episode-level slack). Five seeds each, selection on
-stochastic validation, both evaluation modes on the 50 test episodes. Table 2
-reports the outcomes and Table 3 the paired comparisons.
+Two cells ran at full budget, five seeds each, selected on stochastic validation
+and evaluated in both modes on the 50 test episodes: the original implementation
+(shaped reward, cumulative-rate slack) as control, and the Section 4.3 correction
+(cost-only reward, episode-level slack).
 
 **Table 2.** Full-budget comparison. CI is the 95% two-sided t-interval across
 seeds; "sat." is joint constraint satisfaction over test episodes. References
@@ -570,47 +492,38 @@ comparisons surviving the Holm adjustment within their family.
 | electronics, symmetric | corrected (hinged) | +3.81 [+0.92, +6.61] | 0.012 | −20.4 [−30.0, −11.2] | < 0.001* |
 | electronics, symmetric | original signal | −0.21 [−3.22, +2.80] | 0.89 | +4.8 [−9.6, +19.2] | 0.54 |
 
-Four results follow. First, every seed in every cell now satisfies the validation
-criterion, including the unmodified original signal, which under the initial
-protocol satisfied it on 0 of 5 electronics seeds. Evaluation mode alone reverses
-the pass/fail verdict on the harder testbed. Second, on electronics the slack
-correction is worth 25 percentage points of joint satisfaction and about $4 per
-unit against the original signal, and both differences survive adjustment. Third,
-on bakery it makes no measurable difference in either metric; the multiplier
-still saturates on all five control seeds, so the mechanism of Section 4.2 is
-present, but on the easier problem the saturated penalty does not damage the
-policy enough to show. That is reported as a null result, not a partial success.
+First, every seed now satisfies the validation criterion, including the
+unmodified original signal, which passed on 0 of 5 electronics seeds under the
+initial protocol: evaluation mode alone reverses the pass/fail verdict on the
+harder testbed. Second, on electronics the correction buys 25 percentage points
+of joint satisfaction and about $4 per unit, both surviving adjustment. Third, on
+bakery it makes no measurable difference in either metric: the multiplier still
+saturates on all five control seeds, so the Section 4.2 mechanism is present, but
+the penalty does not damage the policy enough to show — a null result, not a
+partial success.
 
-Fourth, and most consequential, the corrected agent does not separate from
-stateless routing on cost per unit. The paired difference against RoundRobin is
-−$0.79 [−2.74, +1.37] and against UniformRandom −$1.81 [−3.96, +0.41]; these
-intervals are wide enough to contain differences of a few dollars in either
-direction, so this is a failure to detect rather than a demonstration of
-equality. On joint satisfaction the agent is ahead of UniformRandom by 17 points,
-which survives adjustment, and ahead of RoundRobin by 9 points, which does not.
-On bakery no comparison against any rule is significant. ShortestQueue remains
-ahead of every learned policy: 6.2% cheaper per unit on electronics with 100%
-constraint satisfaction, and the only comparator on that testbed against which
-the corrected agent is significantly worse on both metrics.
+Fourth and most consequential, the corrected agent does not separate from
+stateless routing on cost per unit: −$0.79 [−2.74, +1.37] against RoundRobin,
+−$1.81 [−3.96, +0.41] against UniformRandom, intervals admitting a few dollars
+either way — a failure to detect rather than a demonstration of equality. It
+leads UniformRandom by 17 satisfaction points, which survives adjustment, and
+RoundRobin by 9, which does not; on bakery no comparison against any rule is
+significant. ShortestQueue stays ahead of every learned policy, 6.2% cheaper per
+unit on electronics at 100% satisfaction.
 
-A further feature of Table 2 is the dispersion between seeds. Under greedy
-evaluation the electronics intervals are ±43 to ±76; under stochastic evaluation
-of the same checkpoints they are ±1.6. The severe seed-to-seed instability that
-the initial study reported was, to a first approximation, the variance of a
-greedy action taken over near-uniform distributions.
+Table 2 also shows the seed dispersion: greedy evaluation gives electronics
+intervals of ±43 to ±76, stochastic evaluation of the same checkpoints ±1.6. The
+severe seed-to-seed instability the initial study reported was, to a first
+approximation, greedy-action variance over near-uniform distributions.
 
 ### 6.3 Re-evaluation of the archived checkpoints
 
-The initial study's checkpoints were re-evaluated without retraining: the
-one-sided Lagrangian variant of Section 4.2, and a PID-Lagrangian comparator with
-exponentially smoothed slack in the manner of Stooke and colleagues
-[@stooke2020pid], on both testbeds and every archived seed. Applying the original
-greedy selection rule to the archived validation sweep reproduces the originally
-selected checkpoint in 18 of 18 runs and the recorded test figures to the cent,
-so the pipeline evaluated here is the one that produced them. Two questions are
-asked of each run: what the originally selected checkpoint scores when evaluated
-stochastically (Q1), and which checkpoint stochastic selection would have chosen
-and what it scores (Q2). Table 4 reports both.
+The initial study's checkpoints were re-evaluated without retraining — the
+one-sided Lagrangian of Section 4.2 and a PID-Lagrangian comparator with
+exponentially smoothed slack [@stooke2020pid] — on both testbeds and every
+archived seed. Applied to the archived validation sweep, the original greedy rule
+reproduces the selected checkpoint in 18 of 18 runs and the test figures to the
+cent: this pipeline produced them. Table 4 gives the result.
 
 **Table 4.** Re-evaluation of the archived checkpoints. Q1 evaluates the
 originally selected checkpoint in both modes; Q2 applies stochastic selection.
@@ -625,132 +538,109 @@ n = 4 for the PID variant because one seed's checkpoints were not archived.
 
 The five electronics checkpoints recorded as failing systematically, at $113.31,
 $112.08, $95.38, $118.35 and $124.44, score $83.78, $81.23, $78.68, $81.73 and
-$81.33 as stochastic policies, with joint satisfaction of 64–88%. The files are
+$81.33 as stochastic policies, with joint satisfaction of 64–88%; the files are
 unchanged. Had the original protocol selected on stochastic validation, all five
-would have been reported as satisfying the criterion at $81.59 ± 2.68. The
-negative result is thus reproduced and then reversed on its own artefacts,
-without retraining. These scores are, once again, at the level of RoundRobin and
-UniformRandom in Table 1.
+would have been reported as satisfying the criterion at $81.59 ± 2.68, level with
+RoundRobin and UniformRandom in Table 1. The negative result is thus reproduced
+and reversed on its own artefacts.
 
 The bakery rows show the complementary pattern: greedy and stochastic scores lie
-within a few dollars of each other on most seeds, and greedy selection already
-satisfied validation on 4 of 5 seeds. Greedy extraction finds a feasible
-deterministic policy often on bakery and almost never on electronics. This is not
-because no feasible deterministic policy exists there, since ShortestQueue is one
-and a better one than anything learned, but because the learned distributions on
-electronics are close enough to uniform that their greedy action is arbitrary.
+within a few dollars on most seeds, and greedy selection already satisfied
+validation on 4 of 5 seeds. Greedy extraction thus succeeds often on bakery and
+almost never on electronics — not because no feasible deterministic policy exists
+there, since ShortestQueue is one and a better one than anything learned, but
+because the learned distributions there are near enough uniform that their mode
+turns on unstable logit differences.
 
 ### 6.4 The scale of the constraint terms against the objective
 
-The magnitude of the penalty relative to the objective is the third link in the
-chain, and it needs stating in the units the agent actually optimises. By Eq. (1)
-the per-episode base return under cost-only weights is −κ C(τ)/C_norm, which is
-−10.1 to −10.6 on both testbeds; the initial study's analysis compared the
-integrated penalty against a per-episode cost expressed in dollars and thereby
-mixed units. Evaluated correctly, the penalty of Eq. (7) on the test episodes of
-the corrected runs is already 190–300 times larger in magnitude at the initial
-multipliers (λ_T, λ_U) = (200, 5), and 1,200–10,000 times larger at the
-multipliers reached by the end of training. For the control cell at saturation
-the ratio is of order 10⁴.
+The third link in the chain, the penalty's scale against the objective, needs
+stating in the units the agent optimises: by Eq. (1) the per-episode base return
+under cost-only weights is −κ C(τ)/C_norm, or −10.1 to −10.6 on both testbeds,
+whereas the initial study compared the integrated penalty against a per-episode
+cost in dollars, mixing units. Evaluated correctly, the penalty of Eq. (7) on the
+corrected runs' test episodes is already 190–300 times larger in magnitude at the
+initial multipliers (λ_T, λ_U) = (200, 5), and 1,200–10,000 times larger at those
+reached by training's end; in the saturated control cell the ratio is of order
+10⁴.
 
-Two features of that term govern what follows. Its sign is negative on almost
-every episode, because both constraints are over-satisfied by any load-spreading
-policy: mean throughput is 57.0 against a floor of 50 on electronics and 20.2
-against 18 on bakery, and mean fast-server utilisation is 0.79–0.91 against a
-floor of 0.50. The term therefore acts as a reward for surplus throughput and
-surplus fast-server busy time rather than as a penalty. And it cannot shrink,
-because Eqs. (8) and (9) never decrease a multiplier, whereas the equilibrium
-value of a multiplier on a slack constraint is zero. The comparison of returns
-understates the imbalance seen by the policy gradient: the cost term of Eq. (1)
-differs between the routing actions available at a decision by about 10⁻³ per
-step, whereas a single departure moves the per-step term of Eq. (6) by λ_T,
-between 200 and 7,858.
+The penalty's sign is negative on almost every episode, since any load-spreading
+policy over-satisfies both constraints: mean throughput 57.0 against a floor of
+50 on electronics and 20.2 against 18 on bakery, fast-server utilisation
+0.79–0.91 against a floor of 0.50. It therefore rewards surplus throughput and
+fast-server busy time rather than acting as a penalty, and cannot shrink:
+Eqs. (8) and (9) never decrease a multiplier, whereas the equilibrium multiplier
+on a slack constraint is zero. Returns understate the imbalance seen by the
+policy gradient: the cost term of Eq. (1) differs across the routing actions at a
+decision by about 10⁻³ per step, whereas one departure moves the per-step term of
+Eq. (6) by λ_T, between 200 and 7,858.
 
-In every one-sided configuration of this study, therefore, the original and the
-corrected alike, the objective actually optimised was to within a fraction of a
-percent the throughput and fast-server utilisation terms, and the cost term of
-Eq. (2) was numerically irrelevant. This is independent of the two artefacts and
-follows from two choices inherited unchanged from the initial study: multiplier
-initial values and step sizes set in the units of the per-step signal of Eq. (4),
-which are large relative to a reward whose episode return is of order ten, and
-the hinge in the dual update. Section 6.7 reports the experiment that removes
-both.
+In every one-sided configuration, original and corrected alike, the objective
+optimised was, to within a fraction of a percent, the throughput and fast-server
+utilisation terms, with Eq. (2)'s cost term numerically irrelevant. This is
+independent of the two artefacts, following from two inherited choices:
+multiplier initial values and step sizes set in the units of the per-step signal
+of Eq. (4), large against an episode return of order ten, and the hinge in the
+dual update. Section 6.7 reports the experiment that removes both.
 
 ### 6.5 Structure of the learned policies
 
 For the selected checkpoint of every full-budget run, the stochastic policy was
-rolled out on ten test episodes and the entropy and largest probability of the
-action distribution recorded at every decision, together with three measures of
-how much the greedy action means, computed on a common set of 2,395 states
-visited under uniform-random routing (Appendix B, Table B2).
+rolled out on ten test episodes and its action distribution recorded at every
+decision, together with three measures of how much the greedy action means,
+computed on a common set of 2,395 states visited under uniform-random routing
+(Appendix B.1 and Table B2).
 
-The hinged cells learn near-uniform routers with a modest tilt. On electronics
-the most probable route at a typical decision carries 13–18% of the mass against
-8.3% for uniform, normalised entropy is 0.94–0.98 and the effective number of
-routes is 10.4–11.5 of 12. The tilt is not random: the corrected policies load
-the two constrained fast servers to 0.82 and 0.79 mean utilisation on
-electronics, against 0.65 and 0.69 under uniform-random routing and 0.81 and 0.90
-under ShortestQueue. That is the response one would expect to the objective
-identified in Section 6.4, in which surplus fast-server busy time is rewarded,
-and it buys constraint reliability without buying cost efficiency.
+The hinged cells learn near-uniform routers with a tilt toward the constrained
+servers. On electronics the most probable route at a typical decision carries
+13–18% of the mass against 8.3% for uniform, and the corrected policies load the
+two constrained fast servers to 0.82 and 0.79 mean utilisation against 0.65 and
+0.69 under uniform-random routing. That is the response invited by the objective
+of Section 6.4, in which surplus fast-server busy time is rewarded, and it buys
+constraint reliability without buying cost efficiency.
 
-The greedy-action diagnostics show why evaluating these policies by their mode
-measured so little. On electronics the top action leads the runner-up by two
-percentage points of probability on average; two seeds' greedy policies agree on
-18% of states in the corrected cell and 9% in the control, against 8.3% by
-chance; and logit noise of standard deviation 0.1 changes the greedy action at a
-quarter of visited states. Greedy evaluation therefore selects a route determined
-by differences that neither replicate across seeds nor survive small
-perturbations, and it has no reason to be feasible, which is the origin of the
-wide intervals in Table 2. On bakery, with four routes, the gaps are larger and
-agreement higher, and the greedy feasibility rate of 54% is correspondingly
-better.
-
-Two robustness checks. Single-draw stochastic evaluation introduces sampling
-variance of its own: re-evaluating one electronics checkpoint five times with
-different sampling seeds gives cost per unit 79.11–81.63 (SD 0.96) and joint
-satisfaction 88–96% (SD 0.036), narrower than the between-seed intervals of
-Table 2, and the bootstrap of Table 3 resamples episodes as well as seeds. And
-the control cell is, if anything, closer to uniform than the corrected cell,
-consistent with Section 6.1: a saturated penalty four orders of magnitude larger
-than the base reward leaves the policy gradient with almost nothing to say about
-routing.
+The greedy diagnostics account for the wide intervals in Table 2. On electronics
+the top action leads the runner-up by two percentage points of probability, two
+seeds' greedy policies agree on 18% of states in the corrected cell against 8.3%
+by chance, and logit noise of standard deviation 0.1 changes the greedy action at
+a quarter of visited states. Greedy evaluation therefore selects a route
+determined by differences that neither replicate across seeds nor survive small
+perturbations, and it has no reason to be feasible. Appendix B.1 reports the
+bakery figures, where four routes make the gaps larger and greedy extraction
+feasible far more often, and two robustness checks on the stochastic figures.
 
 ### 6.6 Sensitivity to the constraint thresholds
 
-The thresholds were set from a one-shot LeastUtilised run, and Table 1 shows
-that at those values stateless routing satisfies both constraints on most
-episodes. Joint satisfaction was therefore recomputed from the archived
-per-episode records at stricter thresholds, for the dispatching rules and for the
-stochastic policies of the learned cells, without retraining (Appendix B,
-Table B3). This is a post-hoc re-scoring of policies trained for the original
-thresholds, not an experiment on policies trained for the stricter ones.
+The thresholds were set from a one-shot LeastUtilised run, and Table 1 shows that
+at those values stateless routing satisfies both constraints on most episodes.
+Joint satisfaction was therefore recomputed from the archived per-episode records
+at stricter thresholds, without retraining, which re-scores policies trained for
+the original thresholds rather than testing policies trained for the stricter
+ones (Appendix B.2 and Table B3).
 
-Two patterns emerge. Raising the utilisation floor separates policies that route
-preferentially to the fast servers from those that do not: at U_min = 0.70 on
+The two floors separate the policies in opposite directions. Raising the
+utilisation floor rewards the tilt of Section 6.5: at U_min = 0.70 on
 electronics, ShortestQueue and LeastUtilised still satisfy on 96% of episodes,
-uniform-random routing on 16%, and the corrected agent on 71%, so the utilisation
-tilt of Section 6.5 recovers roughly two-thirds of the gap between stateless
-routing and the state-aware rules. Raising the throughput floor does the
-opposite. At T_min = 58 on electronics, where ShortestQueue still satisfies on 86%
-of episodes, the corrected agent falls to 46%, closer to RoundRobin at 30% than
-to ShortestQueue, and at T_min = 60 every learned or stateless policy is at or
-below 30%. Meeting a demanding throughput floor requires the queue-sensitive
-routing that ShortestQueue performs and the learned policies do not; the
-constraint the agent was trained against did not require it.
+uniform-random routing on 16%, and the corrected agent on 71%, recovering roughly
+two-thirds of the gap between stateless routing and the state-aware rules.
+Raising the throughput floor exposes what the agent never learned: at T_min = 58,
+where ShortestQueue still satisfies on 86% of episodes, the corrected agent falls
+to 46%, closer to RoundRobin at 30% than to ShortestQueue. Meeting a demanding
+throughput floor requires the queue-sensitive routing ShortestQueue performs and
+the learned policies do not, and the constraint they were trained against did not
+require it.
 
 ### 6.7 A functioning dual, and what it reveals about the objective
 
-The final cell removes the two features identified in Section 6.4 as holding the
-multipliers away from equilibrium: the hinge, replaced by the signed update of
-Section 4.3, and the inherited scale, replaced by multipliers initialised,
-stepped and capped on the scale of the reward (λ_T: 0.1, step 2.0, cap 10;
-λ_U: 0.002, step 0.01, cap 0.2). Those values were fixed before any run by two
-independent arguments that agree: the shadow price of a unit of throughput
-implied by the interpolation of Section 3.4, about 0.1 reward units, and of a
-busy-step of a fast server, about 0.002; and the factor of roughly 2,400 by which
-the inherited multipliers must be divided to bring the penalty on a typical
-episode to a tenth of the return. Five seeds, full budget, electronics.
+The final cell removes the two features of Section 6.4 that held the multipliers
+from equilibrium: the hinge, replaced by the signed update of Section 4.3, and
+the inherited scale, replaced by multipliers initialised, stepped and capped on
+the reward's scale (λ_T: 0.1, step 2.0, cap 10; λ_U: 0.002, step 0.01, cap 0.2).
+Two independent, agreeing arguments fixed these before any run: the Section 3.4
+interpolation's shadow prices, about 0.1 reward units per throughput unit and
+about 0.002 per fast-server busy-step, and the factor of roughly 2,400 dividing
+the inherited multipliers to bring a typical episode penalty to a tenth of the
+return. Five seeds, full budget, electronics.
 
 **Table 5.** Symmetric, reward-scaled cell, electronics, per seed. λ_T statistics
 are over the 3,352 training episodes; the penalty ratio is the magnitude of the
@@ -774,265 +664,194 @@ estimate of 0.1 from which the initial value was set. (b) Throughput slack
 TP − T_min per training episode, 50-episode moving average; the dashed line is
 the mean slack of uniform-random routing on the test episodes.
 
-The dual now behaves as a dual. λ_T is released to zero within a few episodes
-whenever the constraint is slack, rises when it is violated, and spends training
-oscillating between 0 and about 0.5, with a per-seed training mean of 0.06–0.13
-that brackets the a priori shadow-price estimate; it is positive on 60–72% of
-episodes and never approaches its cap. The constraint terms are consequently on
-the scale of the cost term throughout, at 7–14% of the return at the
-training-mean multipliers, against 190 to 10,000 times the return in the hinged
-cells.
+The dual now behaves as a dual. λ_T falls to zero within a few episodes when the
+constraint is slack, rises when violated, oscillates between 0 and about 0.5,
+never nears its cap, and is positive on 60–72% of episodes; its per-seed training
+mean, 0.06–0.13, brackets the a priori shadow-price estimate. The constraint
+terms stay on the scale of the cost term, 7–14% of the return at the
+training-mean multipliers, against 190 to 10,000 times it in the hinged cells.
 
-The policy responds in the direction the total-cost objective pushes it. Within
-the first 400K steps, mean throughput per training episode falls from the level
-of random routing, 4.4 units above T_min, to 1–3 units above it and stays there
+Within the first 400K steps mean throughput per training episode falls from
+random routing's 4.4 units above T_min to 1–3 units above it and stays there
 (Figure 2b), with 24–39% of training episodes below T_min in every quarter of
-every seed. The expectation constraint of Eq. (2) is thus satisfied during
-training with a margin of one to three units, and the selected checkpoints
-satisfy it on test with a margin of 4.1 units. The chance constraints are met
-only narrowly and the joint criterion is not met at all. Of the 95 checkpoints
-validated across the five seeds only 14 qualify under the 16-of-20 rule, although
-every seed had at least one and none fell back; on test the selected checkpoints
-satisfy the throughput constraint on 84.8% of episodes and the utilisation
-constraint on 82.0%, both just above the 80% the rule demands, but they satisfy
-the two jointly on only 74.8%, 20 points below the corrected cell and 25 below
-ShortestQueue. This is the configuration promised in Section 3.3: it satisfies
-Eq. (2) and both chance constraints while failing the joint criterion that
-results report.
+every seed; the expectation constraint of Eq. (2) is thus met in training by one
+to three units and at the selected checkpoints on test by 4.1. Of 95 checkpoints
+validated across five seeds only 14 qualify under the 16-of-20 rule, though every
+seed had at least one and none fell back. The selected checkpoints satisfy the
+throughput constraint on 84.8% of test episodes and the utilisation constraint on
+82.0%, both just above the 80% demanded, but the two jointly on only 74.8%, 20
+points below the corrected cell and 25 below ShortestQueue. This is the
+configuration Section 3.3 promised: Eq. (2) and both chance constraints
+satisfied, the reported joint criterion failed.
 
-On the reported metric the cell is no better. Its $81.91 ± 3.47 is significantly
-above ShortestQueue and indistinguishable from RoundRobin, UniformRandom,
-LeastUtilised and the original signal (Table 3). On total cost, the quantity it
-actually minimises, it is not the cheapest either: mean episode cost is $4,414
-for this cell against $4,342 for RoundRobin, $4,346 for UniformRandom, $4,445 for
-the corrected cell, $4,493 for ShortestQueue and $4,542 for LeastUtilised. Under
-the paired bootstrap of Section 5.2 applied to total cost the cell sits $72 above
-RoundRobin [−$42, +$183] and $67 above UniformRandom [−$53, +$187], neither
-resolvable, and $129 below LeastUtilised [−$229, −$30], which is. A functioning
-dual therefore buys a real total-cost improvement over one state-aware rule and
-none over stateless routing. That
-comparison is the direct measurement promised in Section 3.4. Across the seven
-load-spreading policies in this study, mean episode cost spans 4.6%, from $4,342
-for RoundRobin to $4,542 for LeastUtilised, because the work to be processed is
-fixed by the arrival process and routing changes only which server performs it
-and how long jobs wait; throughput across the same policies spans 15.5%, from
-53.2 to 61.4 units. An objective that is nearly flat in routing and indifferent to
-throughput above the floor has little to teach a policy gradient about routing,
-and what it does teach, that throughput above the floor is not worth paying for,
-is the opposite of what cost per unit rewards.
+On the reported metric it is no better: $81.91 ± 3.47, significantly above
+ShortestQueue and indistinguishable from RoundRobin, UniformRandom, LeastUtilised
+and the original signal (Table 3). Nor is it cheapest on the total cost it
+minimises: $4,414 per episode against $4,342 (RoundRobin), $4,346
+(UniformRandom), $4,445 (corrected cell), $4,493 (ShortestQueue) and $4,542
+(LeastUtilised). Under the paired bootstrap of Section 5.2 on total cost it sits
+$72 above RoundRobin [−$42, +$183] and $67 above UniformRandom [−$53, +$187],
+neither resolvable, and $129 below LeastUtilised [−$229, −$30], which is.
+Section 3.4's direct measurement shows why: across the seven load-spreading
+policies mean episode cost spans 4.6%, $4,342 to $4,542, because the arrival
+process fixes the work and routing changes only where it runs and how long jobs
+wait; throughput spans 15.5%, 53.2 to 61.4 units. An objective nearly flat in
+routing and indifferent to throughput above the floor teaches a policy gradient
+little, and what it teaches, that such throughput is not worth paying for, is the
+opposite of what cost per unit rewards.
 
-What the cell did learn is a different kind of policy from every other cell here.
-Its action distributions are concentrated: normalised entropy 0.63–0.83 against
-0.94–0.97 for the hinged cells, 4.8–7.8 effective routes against 10.4–11.3, and a
-mean top-1 probability of 0.28–0.48 against 0.13–0.18. Yet its marginal route
-frequencies across an episode remain near-uniform at 0.89–0.96, so the
-concentration is state-dependent: this policy routes differently in different
-states, which the near-uniform cells did not. It is also randomised in the sense
-of Section 2.2 rather than merely flat. Its greedy action is a coherent
-conservative router, throughput 41.8 at $110 per unit and feasible on 10% of
-episodes, while the stochastic policy from which it is extracted reaches 54 units
-at $82; the randomisation carries a quarter of the throughput. Greedy extraction
-fails here for the reason the CMDP literature predicts rather than because the
-logits are flat, and logit noise of 0.1 now moves the greedy action at 10% of
-states rather than 25%.
+Its action distributions are unlike any other cell's: normalised entropy
+0.63–0.83 against 0.94–0.97 for the hinged cells, 4.8–7.8 effective routes
+against 10.4–11.3, mean top-1 probability 0.28–0.48 against 0.13–0.18, yet
+marginal route frequencies over an episode near-uniform at 0.89–0.96. The
+concentration is therefore state-dependent as the near-uniform cells were not,
+and randomised in the sense of Section 2.2 rather than merely flat: its greedy
+action is a coherent conservative router at throughput 41.8, $110 per unit,
+feasible on 10% of episodes, while the stochastic policy behind it reaches 54
+units at $82; the randomisation carries a quarter of the throughput. Greedy
+extraction fails for the reason the CMDP literature predicts, not because the
+logits are flat: logit noise of 0.1 now moves the greedy action at 10% of states
+rather than 25%.
 
-A functioning dual on the stated CMDP therefore does not produce a policy
-competitive with ShortestQueue on either metric. It produces a state-dependent,
-randomised policy that the total-cost objective drives to the throughput floor,
-satisfying the expectation constraint and both chance constraints, failing the
-joint criterion on a quarter of episodes, and no cheaper per unit than stateless
-routing. Whether it approaches the total-cost optimum cannot be established here:
-its total cost is not below that of stateless routing, so the objective was
-pursued but not demonstrably solved.
+A functioning dual on the stated CMDP therefore produces no policy competitive
+with ShortestQueue on either metric. Whether it approaches the total-cost optimum
+cannot be established here: its total cost is not below that of stateless
+routing, so the objective was pursued but not demonstrably solved.
 
 ## 7. Discussion
 
 ### 7.1 Where the chain broke, and what each break cost
 
-The three breaks examined here differ in kind and in consequence. The first, a
-per-step surrogate for an episode-level constraint, is a modelling error with a
-specific and generalisable form: in any system with non-trivial transit time, a
-cumulative-average translation is biased during the fill phase of every episode.
-The bias is small, of order 10⁻³ per step, and would be harmless under a
-symmetric dual update that released the multiplier once the line filled. Under a
-monotone one-sided update it integrates without bound. Each choice is defensible
-alone and the combination is not, which is what makes this class of error hard to
-detect. Its consequence is problem-dependent: the multiplier saturates on every
-control seed of both testbeds, but the damage to the policy is measurable only on
-the 12-route instance.
-
-The second, evaluating a near-uniform stochastic policy by its mode, is what
-reverses the reported verdict, and Section 6.3 shows it doing so on the archived
-checkpoints without retraining. It would have gone unnoticed had the first break
-not prompted a re-examination of the pipeline.
-
-The third, the scale of the multipliers, is the one that survives correction of
-the other two and explains the residual result. It is also the least visible: no
-diagnostic in the original pipeline would have surfaced it, whereas a single
-ratio of penalty magnitude to base return, reported at initialisation and at the
-end of training, exposes it immediately.
+The three breaks differ in kind. The first, a per-step surrogate for an
+episode-level constraint, is a modelling error of generalisable form, defensible
+in isolation: wherever transit time is a sizeable fraction of the horizon, a
+cumulative-average translation is biased throughout the fill phase by a small
+amount, of order 10⁻³ per step, that a symmetric dual update would release once
+the line filled and a monotone one-sided update integrates without bound. Its
+consequence is problem-dependent: the multiplier saturates on every control seed,
+but the policy is measurably damaged only on the 12-route instance. The second,
+greedy evaluation of a near-uniform policy, reverses the reported verdict. The
+third, the scale of the multipliers, survives correction of the other two and
+explains the residual result. It is also the least visible: nothing in the
+original pipeline would have surfaced it, whereas a single ratio of penalty to
+base return exposes it at once.
 
 ### 7.2 What the method learned, and what it was asked to learn
 
-Correcting the first two breaks does not produce a competitive agent; it produces
-a near-uniform router with a tilt toward the fast servers, indistinguishable from
-RoundRobin and UniformRandom on cost per unit and ahead of UniformRandom on
-constraint reliability. Section 6.4 supplies the reason, and it is not the one
-originally offered. The agent was not defeated by a penalty that overwhelmed its
-objective; its objective was, for practical purposes, the constraint terms. With
-the multipliers two to four orders of magnitude above the scale of the cost term,
-never released, and with both constraints slack under any load-spreading policy,
-the augmented return rewarded surplus throughput and surplus fast-server busy
-time and registered cost only in the third or fourth significant figure. A
-near-uniform router tilted toward the fast servers is a reasonable response to
-that objective, and it is what every hinged cell produced.
+The penalty did not overwhelm the agent's objective: for practical purposes it
+was that objective. With the multipliers two to four orders of magnitude above
+the cost term, never released, and both constraints slack under any
+load-spreading policy, the augmented return rewarded surplus throughput and
+fast-server busy time, registering cost only in the third or fourth significant
+figure; every hinged cell responded with a near-uniform router tilted toward the
+fast servers.
 
-Section 6.7 closes the question. With multipliers on the scale of the reward and
-free to fall, PPO does leave the uniform policy and learns a state-dependent
-router, and that router moves toward the throughput floor as the stated CMDP
-directs. The mechanism, measured across the seven load-spreading policies of the
-study, is that total episode cost is nearly flat in routing while throughput is
-not, so cost per unit falls with throughput across that range. An agent
-minimising total cost has no reason to buy throughput above the floor, so a
-working Lagrangian moves the policy away from the region where the reported
-metric is lowest, and the joint criterion the protocol reports is stricter than
-the expectation constraint the Lagrangian enforces. The phrase "failed to learn" therefore needs
-qualification twice over. Constrained PPO failed to learn a cost-efficient,
-state-aware routing policy competitive with ShortestQueue. In the hinged cells it
-was never seriously asked to, because cost carried negligible weight in the
-objective; in the symmetric cell it was asked to minimise a quantity that is not
-the metric, and moved in that direction.
+The symmetric cell moves the fault upstream: a reward-scaled dual free to fall
+does make PPO leave the uniform policy, and the state-dependent router it learns
+moves to the throughput floor as a total-cost objective directs. "Failed to
+learn" therefore needs qualification twice over: the hinged cells were never
+seriously asked to minimise cost, and the symmetric cell was asked to minimise a
+quantity that is not the reported metric, and did so.
 
-Three consequences follow for anyone posing this problem to a constrained
-learner. If cost per unit is the criterion by which routing performance is
-judged, the learning objective should be aligned with it, through a ratio
-objective or a throughput term whose weight is set by the reported metric rather
-than by a constraint; on these testbeds a per-departure bonus of that kind
-narrowed but did not close the gap to ShortestQueue for unconstrained PPO
-[@alrashdan2026breakdowns]. A CMDP that minimises total cost is a legitimate
-formulation, but it should then be judged on total cost, and here it was not. The
-constraint enforced should be the constraint checked: a joint per-episode
-criterion needs a per-episode formulation, such as a penalty on the violation
-indicator or a conditional-value-at-risk constraint on the joint event, rather
-than an expectation constraint whose satisfaction, with both marginal chance
-constraints met, still leaves a quarter of episodes jointly infeasible. And a functioning dual is necessary but not sufficient; here
-it changed what was learned without making it competitive.
-
-Until those changes are made and tested, the practical recommendation is
-unchanged, though for a different reason than originally given. Tuned dispatching
-rules remain the baseline to beat on problems of this size and structure. The
-constrained agent no longer exhibits systematic constraint failure; it meets the
-protocol's criterion either as a fast-server-biased random router does or, under
-a functioning dual, by satisfying the expectation constraint and both marginal
-chance constraints while failing the joint criterion on a quarter of episodes,
-and in both cases it costs more per unit than a rule that reads the queues.
+Three consequences follow. If cost per unit is the criterion, the objective
+should be aligned with it, by a ratio objective or a throughput term weighted by
+that metric, not by a constraint; a per-departure bonus of that kind narrowed but
+did not close the gap to ShortestQueue for unconstrained PPO on these testbeds
+[@alrashdan2026breakdowns]. A total-cost CMDP is legitimate but should then be
+judged on total cost. And the constraint enforced should be the constraint
+checked: a joint per-episode criterion needs a per-episode formulation, a
+violation-indicator penalty or a conditional-value-at-risk constraint on the
+joint event, not an expectation constraint whose satisfaction still leaves a
+quarter of episodes jointly infeasible. A functioning dual is necessary and not
+sufficient: here it changed what was learned without making it competitive, and
+tuned dispatching rules remain the baseline to beat at this problem size and
+structure.
 
 ### 7.3 Deterministic deployment
 
-Feasible deterministic policies exist on both testbeds; ShortestQueue is one.
-What was not obtained is a feasible deterministic policy extracted from a learned
-agent on the harder testbed, for two different reasons in the two kinds of cell.
-Greedy extraction from the near-uniform distributions of the hinged cells yields
-an arbitrary route. Greedy extraction from the concentrated distributions of the
-symmetric cell yields a coherent but conservative router, feasible on 10% of
-episodes, because the randomisation carries a quarter of the throughput; this is
-the randomised-optimum structure of Section 2.2 observed directly. In plants that
-cannot deploy a stochastic controller, and auditability and operator trust are
-good reasons for such a requirement, the learned policies studied here are not
-deployable, and the corrections described do not change that. The greedy column
-is reported throughout so that this remains visible.
+Feasible deterministic policies exist on both testbeds, ShortestQueue among them,
+but none was extracted from a learned agent on the harder testbed: greedy
+extraction from the near-uniform hinged distributions yields a route fixed by
+unstable logit differences, and from the concentrated distributions of the
+symmetric cell a coherent but conservative router, feasible on 10% of episodes,
+because the randomisation carries a quarter of the throughput. Where auditability
+or operator trust rules out a stochastic controller, these policies are not
+deployable, and the corrections do not change that.
 
 ### 7.4 Reporting practice
 
-Two systematic reviews have criticised this field for weak baselines and
-simulation-only validation. This study suggests four further items. Where a
-constrained method is reported to fail its constraints, a reader should be able to
-verify that the constraint optimised is the constraint stated: the exact
-augmented per-step reward, the exact dual update, the units of the slack signal
-and its measured value under a known-good reference policy should all be
-reported. The magnitude of the constraint terms relative to the objective, at
-initialisation and at the end of training, should be reported with them; a single
-ratio would have exposed the third break immediately. Where a stochastic policy
-is evaluated, the mode should be stated and both modes reported, together with a
-measure of how far the learned distribution is from uniform. And where a learned
-router is compared against dispatching rules, uniform-random and round-robin
-routing should be among them, evaluated under the same protocol with their own
-uncertainty propagated; without that control this study would have reported a
-recovery where there was only a near-random policy meeting undemanding
-constraints.
+Four items follow for simulation studies of learned production control. A report
+that a constrained method failed its constraints should let the reader check that
+the constraint optimised is the one stated: the augmented per-step reward, the
+dual update, and the slack signal's units and measured value under a known-good
+reference policy. The ratio of the constraint terms to the objective should be
+reported with them, at initialisation and at the end of training. Where a
+stochastic policy is evaluated, the mode should be stated, both modes reported,
+and the learned distribution's distance from uniform measured. And uniform-random
+and round-robin routing should be among the dispatching baselines, evaluated
+under the same protocol with their uncertainty propagated; without that control
+this study would have read a near-random policy meeting undemanding constraints
+as a recovery.
 
 ## 8. Limitations
 
-The two instances differ simultaneously in action-space size, stage count,
-capacity ratios and reward scale, so while the failure can be attributed to the
-implementation, which is manipulated directly, the difference in difficulty
-between instances cannot be attributed to any single structural feature; a
-controlled feature ablation remains outstanding. Five seeds per cell is a small
-sample, and although stochastic-mode intervals are tight (±0.7 to ±2.0 on cost
-per unit for the four cells of Table 2, and ±3.5 for the symmetric cell), the
-bootstrap resamples five seed-level means, so it has 126 distinct resamples in
-the seed dimension and is anti-conservative at this cluster count; its
-between-cell intervals should be read as approximate and its p-values between
-0.01 and 0.05 as no better than indicative. The null comparisons
-against stateless routing are failures to detect at this sample size rather than
-evidence of equality: the electronics interval against RoundRobin spans −$2.74 to
-+$1.37 per unit.
+The two instances differ in action-space size, stage count, capacity ratios
+and reward scale, so while the failure is attributable to the directly
+manipulated implementation, the difference in difficulty between them is
+attributable to no single structural feature, absent a controlled ablation.
+Five seeds per cell is a small sample: stochastic-mode intervals are tight
+(±0.7 to ±2.0 for the four cells of Table 2, ±3.5 for the symmetric cell), but
+the bootstrap has only 126 distinct resamples of those five seed-level means
+and is anti-conservative at this cluster count, leaving between-cell intervals
+approximate and p-values between 0.01 and 0.05 no better than indicative. The
+null comparisons against stateless routing are failures to detect rather than
+evidence of equality: the electronics interval against RoundRobin spans −$2.74
+to +$1.37 per unit.
 
-The constraint thresholds were set from a one-shot LeastUtilised run, and Table 1
-shows that stateless routing satisfies them on 78–90% of episodes, so the
-reliability comparison is a comparison at undemanding thresholds. Section 6.6
-shows the ordering changing when they are tightened, but it re-scores policies
-trained for the original thresholds; agents trained against stricter ones were
-not run. Each validation and test episode samples a single action trajectory,
-bounded in Section 6.5 at roughly a third of the between-seed interval, and the
-validation draws that selected the checkpoints were single and unseeded. The
-re-selection in Q2 of Section 6.3 uses the same stochastic validation episodes
-now used for reporting, so the Q1 columns are the cleaner like-for-like
-comparison and the principal claim rests on them. The amendment that introduced
-stochastic selection was motivated by the reduced-budget ablation and is
-therefore not independent of data from the same study, although it was committed
-before the runs it governs.
+Thresholds come from a one-shot LeastUtilised run that Table 1 shows stateless
+routing meeting on 78–90% of episodes, so reliability is compared at
+undemanding thresholds, and Section 6.6 tightens them only by re-scoring
+policies trained for them. Each validation and test episode samples one action
+trajectory, bounded in Section 6.5 at roughly a third of the between-seed
+interval, and the validation draws were single and unseeded. Q2 re-selection
+(Section 6.3) reuses the reporting episodes, so Q1 carries the principal
+claim; and the amendment introducing stochastic selection, though
+pre-committed, followed the reduced-budget ablation and is not independent of
+the same study's data.
 
-Finally, the symmetric cell tests a functioning dual in one configuration only:
-multiplier scales fixed a priori but after the earlier results had been
-inspected, plain dual ascent without damping or averaging, the original entropy
-coefficient, and the electronics instance alone. Its λ_T oscillates rather than
-converging (Figure 2a), and a damped or averaged dual might select different
-checkpoints. The mechanism it exposes, an objective flat in routing and
-indifferent to throughput above the floor, is a property of the objective
-measured across the seven load-spreading policies of the study and is robust to
-those choices, but the cell's numbers are those of one configuration. All results are from simulation;
-there is no physical validation.
+The symmetric cell tests a functioning dual in one configuration only:
+multiplier scales fixed a priori, though after inspecting the earlier results,
+electronics alone, and plain dual ascent, whose λ_T oscillates rather than
+converging (Figure 2a); a damped or averaged dual might select different
+checkpoints. The mechanism it exposes is measured across the study's seven
+load-spreading policies and survives those choices; its numbers do not. All
+results are from simulation, with no physical validation.
 
 ## 9. Conclusions
 
-A reported failure of constrained reinforcement learning on a multi-server
-flow-shop routing problem was traced to three breaks in the chain running from
-the constraint stated to the metric reported. A per-step cumulative-rate
-surrogate for an episode-level constraint drove the multiplier upward for any
-policy and to its cap within the training budget for an oracle dispatching rule.
-Greedy evaluation of near-uniform stochastic policies measured a deterministic
-router selected by unstable logit differences, and correcting it alone reverses
-the reported verdict on the archived checkpoints without retraining. With both
-corrected, every seed satisfies the constraint criterion, but the agent is not
-distinguishable from round-robin routing on cost per unit at this sample size and
-is 6.6% more expensive than ShortestQueue, while the multipliers outweigh the
-cost term by two to four orders of magnitude and cannot be released. Giving the
-dual the scale of the reward and a symmetric update makes it behave as a dual and
-produces a state-dependent policy, which then moves to the throughput floor as a
-total-cost objective directs, and it is no better on the reported metric than the
-stateless rules and remains significantly worse than ShortestQueue.
+A reported failure of constrained reinforcement learning traces to three breaks
+between the constraint stated and the metric reported. A per-step cumulative-rate
+surrogate for an episode-level constraint capped the multiplier within budget for
+an oracle dispatching rule and every trained policy. Greedy evaluation of
+near-uniform policies measured a router selected by unstable logit differences;
+correcting that alone reverses the verdict on the archived checkpoints without
+retraining. With both corrected, every seed satisfies the constraint criterion,
+yet the agent is not distinguishable from round-robin routing on cost per unit at
+this sample size and is 6.6% more expensive than ShortestQueue, with multipliers
+two to four orders of magnitude above the cost term and never released. A
+reward-scaled, symmetric dual behaves as a dual: the policy becomes
+state-dependent and moves to the throughput floor as a total-cost objective
+directs, where it is no better on the reported metric than the stateless rules
+and remains significantly worse than ShortestQueue.
 
-The engineering conclusion is that the objective posed, the constraint enforced,
-the surrogate trained against, the evaluation mode and the reported metric form a
-chain that must be coherent, and that on this problem it was not. Total cost is
-nearly flat in routing while cost per unit falls with throughput, so a total-cost
-CMDP is the wrong instrument for a cost-per-unit objective however well its dual
-behaves. Separating these claims required reporting the constraint actually
-implemented, the scale of the penalty against the objective, the evaluation mode
-actually used, and a random-routing control with its own uncertainty; all four
-are recommended as routine practice for simulation studies of learned production
-control.
+The objective posed, the constraint enforced, the surrogate trained against, the
+evaluation mode and the reported metric form a chain that must be coherent; here
+it was not. Across the seven load-spreading policies, total cost spans 4.6% and
+throughput 15.5%, so cost per unit falls with throughput: a total-cost CMDP is
+the wrong instrument for a cost-per-unit objective however well its dual behaves.
+Separating these claims required reporting the constraint actually implemented,
+the penalty's scale against the objective, the evaluation mode used, and a
+random-routing control; all four belong in routine practice.
 
 ## Author contributions
 
@@ -1133,15 +952,30 @@ Each of 10,000 replicates draws seed indices with replacement, independently for
 X and Y, and a single vector of 50 episode indices with replacement applied to
 both, so the two policies are compared on the same resampled episodes; the
 statistic is the difference of grand means. Intervals are 2.5th–97.5th
-percentiles; p is twice the smaller tail proportion at zero, floored at 1/10,000.
+percentiles; p is twice the smaller tail proportion at zero, so with 10,000
+replicates its resolution limit is 2 × 10⁻⁴ and entries reported as < 0.001 are
+at or below that limit. Resampling five seed-level means admits 126 distinct
+multisets in the seed dimension, which makes the procedure anti-conservative at
+this cluster count; p-values between 0.01 and 0.05 should be read accordingly.
 The pre-specified family on each testbed is the corrected cell against the four
-rules of Table 1 and against the original signal, on cost per unit and on joint
-satisfaction, giving ten tests adjusted by Holm's step-down procedure at
-α = 0.05; the symmetric cell forms its own family of twelve. Confidence intervals
-use the t-distribution with n − 1 degrees of freedom across seeds and the normal
-approximation across episodes.
+load-spreading rules of Table 1 and against the original signal, on cost per unit
+and on joint satisfaction, giving ten tests adjusted by Holm's step-down
+procedure at α = 0.05; the symmetric cell forms its own family of twelve.
+Confidence intervals use the t-distribution with n − 1 degrees of freedom across
+seeds and the normal approximation across episodes.
 
-**A.6 Hardware and runtime.** Training and evaluation ran on a two-vCPU Linux
+**A.6 Size of the recorded deviation.** Two pipeline defects are recorded in
+`protocol_deviations.md` and corrected in every figure reported here (Section
+5.2). Greedy cost per unit is unaffected by both and reproduces the pipeline's
+values to the cent, which is the fidelity check on the re-evaluation. Greedy
+joint satisfaction moves by at most 1.2 percentage points under the aggregation
+correction. Between the unseeded pipeline draw and the seeded re-evaluation,
+cell-level figures differ by at most $1.2 per unit and 5.6 percentage points of
+joint satisfaction; no comparison changes direction, and the largest consequence
+is that the slack correction of Section 6.2 is worth 19 rather than 25 percentage
+points on the other draw.
+
+**A.7 Hardware and runtime.** Training and evaluation ran on a two-vCPU Linux
 container at approximately 800–1,000 environment steps per second. A 400K-step
 segment takes 7–8 minutes and a full 1.6M-step run about 30 minutes plus 10–15
 minutes of dual-mode validation. The complete matrix reported here, comprising 20
@@ -1150,6 +984,31 @@ checkpoints, the baselines and all analyses, consumed approximately 21
 compute-hours.
 
 ## Appendix B. Supplementary tables
+
+**B.1 Structure of the learned policies (Section 6.5).** Normalised entropy of
+the hinged electronics cells is 0.94–0.98 and the effective number of routes
+10.4–11.5 of 12; the corrected policies load the two constrained fast servers to
+0.82 and 0.79 mean utilisation against 0.81 and 0.90 under ShortestQueue. Two
+seeds' greedy policies agree on 9% of states in the control cell against 18% in
+the corrected cell and 8.3% by chance. On bakery, with four routes, the top-1
+gaps are larger and cross-seed agreement higher, and greedy extraction is
+feasible on 54% of episodes rather than none. Two robustness checks bound the
+stochastic figures. Single-draw evaluation carries sampling variance of its own:
+re-evaluating one electronics checkpoint five times with different sampling seeds
+gives cost per unit 79.11–81.63 (SD 0.96) and joint satisfaction 88–96%
+(SD 0.036), against a between-seed SD of 1.32 for the same cell, so roughly half
+the between-seed variance the bootstrap resamples is single-draw noise; the
+bootstrap of Table 3 resamples episodes as well as seeds. And the control cell is
+if anything closer to uniform than the corrected cell, consistent with Section
+6.1: a saturated penalty four orders of magnitude larger than the base reward
+leaves the policy gradient with almost nothing to say about routing.
+
+**B.2 Threshold sensitivity (Section 6.6).** Table B3 re-scores every policy at
+alternative thresholds without retraining. Beyond the two patterns given in
+Section 6.6, raising the throughput floor to T_min = 60 on electronics puts every
+learned and stateless policy at or below 30% while ShortestQueue holds 74%, and
+on bakery the orderings are compressed throughout because four routes leave less
+room for a routing policy to differ from another.
 
 **Table B1.** Mechanism ablation, electronics, 400K steps, 5 seeds per cell,
 greedy selection. Reference: ShortestQueue $73.25 per unit at throughput 61.4.

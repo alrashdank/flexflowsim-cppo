@@ -29,20 +29,21 @@ pipeline rather than of the method.
 Using Lagrangian PPO on two discrete-event flow-shop models with 4 and 12
 routes, the study measures three such breaks. Translating an episode-level
 throughput constraint into a per-step penalty on the cumulative rate is shown,
-analytically and empirically, to saturate the multiplier for every policy
-including an oracle dispatching rule: 10 of 10 seeds saturate with that signal
-and 0 of 10 with an episode-level slack. Evaluating near-uniform stochastic
-policies by their mode is shown to measure an arbitrary deterministic router,
-and correcting it alone reverses the reported verdict on the archived
-checkpoints without any retraining. With both corrected, the agent satisfies its
-constraints on every seed yet remains indistinguishable from round-robin routing
-on cost per unit under a paired hierarchical bootstrap. A final configuration
-with dual multipliers on the scale of the reward makes the dual behave as a
-dual, and the resulting policy moves toward the throughput floor exactly as a
-total-cost objective directs, which makes the reported metric worse. Across all
-seven load-spreading policies studied, total episode cost varies by 4.6% while
-throughput varies by 15.5%, so a total-cost formulation is the wrong instrument
-for a cost-per-unit objective however well its dual behaves.
+analytically and empirically, to drive the multiplier to its cap for an oracle
+dispatching rule as well as every trained policy: 10 of 10 seeds saturate with
+that signal and 0 of 10 with an episode-level slack. Evaluating near-uniform
+stochastic policies by their mode is shown to measure a router selected by
+unstable logit differences, and correcting that alone reverses the reported
+verdict on the archived checkpoints without retraining. With both corrected, the
+agent satisfies the constraint criterion on every seed yet is not distinguishable
+from round-robin routing on cost per unit under a paired hierarchical bootstrap.
+A final configuration with dual multipliers on the scale of the reward makes the
+dual behave as a dual, and the resulting policy moves toward the throughput floor
+exactly as a total-cost objective directs, where it is no better on the reported
+metric than the stateless rules. Across the seven load-spreading policies
+studied, total episode cost varies by 4.6% while throughput varies by 15.5%, so a
+total-cost formulation is the wrong instrument for a cost-per-unit objective
+however well its dual behaves.
 
 I believe the work suits the journal on three grounds. It is a simulation study
 of a manufacturing system, built on an open discrete-event simulator that is
