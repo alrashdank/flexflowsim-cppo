@@ -56,8 +56,8 @@ natural reading of a poor result is that the method does not work.
 This study measures the consequences of three such breaks, using Lagrangian
 Proximal Policy Optimization (PPO) [3] on two multi-server
 flow-shop testbeds, and it does so on a system where the answer can be checked
-against tuned dispatching rules. The vehicle is an earlier study by the present
-author, run under a protocol committed in advance, which reported that no seed
+against tuned dispatching rules. The vehicle is the author's own earlier study,
+run under a protocol committed in advance, which reported that no seed
 satisfied throughput and utilisation constraints on a 12-route electronics
 testbed and that the throughput multiplier saturated against its cap in every
 run. That study is referred to below as the initial study; its protocol,
