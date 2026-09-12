@@ -185,6 +185,188 @@ if r3p.exists():
 else:
     warn("r3", "r3_numbers.json not found; run analysis_audit_r3.py")
 
+# ----------------------------------------------- 6 cross-references must resolve
+# Every "Section x.y", "Table N", "Figure N", "Eq. (n)" and "Appendix X" cited in
+# the text must point at something that exists, and every table and figure must
+# be cited at least once outside its own caption.
+HEADINGS = set()
+for l in LINES:
+    m = re.match(r"#{2,3}\s+(\d+(?:\.\d+)?)\.?\s", l)
+    if m:
+        HEADINGS.add(m.group(1))
+    m = re.match(r"\*\*([A-C]\.\d+)\s", l)          # appendix sub-sections **A.2 ...**
+    if m:
+        HEADINGS.add(m.group(1))
+    m = re.match(r"##\s+Appendix\s+([A-C])\b", l)
+    if m:
+        HEADINGS.add(m.group(1))
+for i, l in locate(r"Sections?\s+\d"):
+    for ref in re.findall(r"\b(\d+\.\d+|\d+)\b", re.search(r"Sections?\s+([\d., and]+)", l).group(1)):
+        if ref not in HEADINGS and not (ref.isdigit() and 1 <= int(ref) <= 9):
+            fail("xref", f"L{i}: Section {ref} does not exist -> {l[:90]}")
+for i, l in locate(r"Appendix\s+[A-C]\b"):
+    for ref in re.findall(r"Appendix\s+([A-C](?:\.\d+)?)", l):
+        if ref not in HEADINGS:
+            fail("xref", f"L{i}: Appendix {ref} does not exist -> {l[:90]}")
+for i, l in locate(r"\b(?:Section|Sections)\s+([A-C]\.\d+)"):
+    for ref in re.findall(r"\b(?:Section|Sections)\s+([A-C]\.\d+)", l):
+        if ref not in HEADINGS:
+            fail("xref", f"L{i}: Section {ref} does not exist -> {l[:90]}")
+
+CAPTIONS = {m.group(1) for m in re.finditer(r"^\*\*(Table [A-C]?\d+|Figure \d+)\.\*\*", TEXT, re.M)}
+CITED = {}
+for i, l in enumerate(LINES, 1):
+    if re.match(r"^\*\*(Table [A-C]?\d+|Figure \d+)\.\*\*", l):
+        continue                                  # the caption itself
+    for m in re.finditer(r"\b(Tables?|Figures?)\s+([A-C]?\d+(?:\s*(?:,|and)\s*[A-C]?\d+)*)", l):
+        kind = "Table" if m.group(1).startswith("Table") else "Figure"
+        tail = l[m.end(): m.end() + 1]
+        nums = re.findall(r"[A-C]?\d+", m.group(2))
+        if tail == "%":                              # "Table 1 and 95%": drop the percentage
+            nums = nums[:-1]
+        for n in nums:
+            CITED.setdefault(f"{kind} {n}", []).append(i)
+for c in sorted(CITED):
+    if c not in CAPTIONS:
+        fail("xref", f"{c} is cited (L{CITED[c][:3]}) but has no caption")
+for c in sorted(CAPTIONS):
+    if c not in CITED:
+        fail("xref", f"{c} has a caption but is never cited in the text")
+
+EQ_TAGS = {m.group(1) for m in re.finditer(r"\\qquad\((\d+)\)\$\$", TEXT)}
+for i, l in locate(r"Eqs?\.\s*\("):
+    for n in re.findall(r"\((\d+)\)", l):
+        if n not in EQ_TAGS and re.search(rf"Eqs?\.\s*\(\s*{n}\s*\)|and\s*\({n}\)|\({n}\)[–-]", l):
+            fail("xref", f"L{i}: Eq. ({n}) is cited but no display equation carries that tag")
+
+# ----------------------------------------------------- 7 wording that must be gone
+# Each of these was a defect found by one of the three audits; none may return.
+BANNED = [
+    (r"\boracle\b", "ShortestQueue is a fixed dispatching rule, not an oracle"),
+    (r"\btoward\b(?!s)", "British spelling is 'towards'"),
+    (r"Hitzmann", "the dataset has a single creator (DataCite)"),
+    (r"draft\s*[—-]+\s*please check", "draft note must not ship"),
+    (r"without approximation|telescopes exactly", "the optimised return is discounted (gamma = 0.99)"),
+    (r"pre-specified family of ten|prespecified family of ten", "the family of ten was defined after the R1 runs"),
+    (r"\bpublished (?:signal|cell|wrapper|configuration)\b", "the initial study is unpublished"),
+    (r"\b(?:was|were|has been|have been) (?:published|submitted)\b", "the initial study is unpublished; check the sentence"),
+]
+for pat, why in BANNED:
+    for i, l in locate(pat):
+        fail("banned", f"L{i}: /{pat}/ ({why}) -> {l[:90]}")
+for i, l in locate(r"pre-specified"):
+    ctx = " ".join(LINES[max(0, i - 2): i + 2]).lower()
+    if re.search(r"(?:outside any|no|not|without a)\s+pre-specified", ctx, re.I):
+        continue                                   # says there was none: correct
+    if "twelve" not in ctx and "protocol" not in ctx:
+        fail("banned", f"L{i}: 'pre-specified' without the family of twelve / protocol in context -> {l[:90]}")
+
+# --------------------------------------------- 8 the built files must match the text
+DRAFT = Path(sys.argv[1]).resolve().parent
+docx_path = DRAFT / "IJMS_manuscript.docx"
+if docx_path.exists():
+    try:
+        from docx import Document
+        from docx.oxml.ns import qn
+        d = Document(str(docx_path))
+        body = d.element.body
+        n_omath = len(body.findall(".//{http://schemas.openxmlformats.org/officeDocument/2006/math}oMath"))
+        n_src_math = TEXT.count("\\(") + TEXT.count("$$") // 2
+        if n_omath < 0.9 * n_src_math:
+            fail("docx", f"only {n_omath} OMML equations in docx against {n_src_math} math spans in source")
+        prose = "\n".join(p.text for p in d.paragraphs)
+        for pat in (r"\bT_min\b", r"\bU_min\b", r"λ_T|lambda_T", r"\\\(", r"\\\)", r"\[@", r"\bg_T\b", r"\\mathrm", r"\\min\b"):
+            for m in re.finditer(pat, prose):
+                fail("docx", f"literal {m.group(0)!r} in docx prose near: {prose[max(0, m.start()-40): m.end()+40]!r}")
+                break
+        sectPr = d.sections[0]._sectPr
+        if sectPr.find(qn("w:lnNumType")) is None:
+            fail("docx", "no continuous line numbering in section properties")
+        if "PAGE" not in d.sections[0].footer._element.xml:
+            fail("docx", "no PAGE field in footer")
+        if "draft" in prose.lower() and re.search(r"draft\s*[—-]", prose, re.I):
+            fail("docx", "a draft note survives in the docx")
+        n_tables_docx = len(d.tables)
+        n_tables_src = len([c for c in CAPTIONS if c.startswith("Table")])
+        if n_tables_docx != n_tables_src:
+            fail("docx", f"{n_tables_docx} tables in docx, {n_tables_src} captions in source")
+    except ImportError:
+        warn("docx", "python-docx not installed; docx checks skipped")
+else:
+    warn("docx", f"{docx_path.name} not built; docx checks skipped")
+
+pdf_path = DRAFT / "IJMS_manuscript.pdf"
+if pdf_path.exists():
+    import subprocess
+    txt = subprocess.run(["pdftotext", "-layout", str(pdf_path), "-"],
+                         capture_output=True, text=True).stdout
+    for n in sorted(EQ_TAGS, key=int):
+        if f"({n})" not in txt:
+            fail("pdf", f"equation tag ({n}) missing from PDF text")
+    for bad in ("[@", "\\(", "\\)", "??", "\\mathrm", "\\lambda"):
+        if bad in txt:
+            fail("pdf", f"literal {bad!r} in PDF text")
+    if "λ" not in txt and "\U0001d706" not in txt:      # upright or mathematical-italic lambda
+        fail("pdf", "no λ glyph in PDF text; equations may not have rendered")
+    for c in sorted(CAPTIONS):
+        if not re.search(rf"{c}\.", txt):
+            fail("pdf", f"caption '{c}.' missing from PDF")
+    for tif in ("Figure1.tif", "Figure2.tif"):
+        if not (DRAFT / tif).exists():
+            fail("pdf", f"{tif} missing")
+else:
+    warn("pdf", f"{pdf_path.name} not built; PDF checks skipped")
+
+fig_script = Path("/home/claude/repo/make_fig_lambda.py")
+if fig_script.exists() and re.search(r'"[^"]*published[^"]*"', fig_script.read_text()):
+    fail("figure", "make_fig_lambda.py labels a curve 'published'")
+
+title_page = DRAFT / "IJMS_title_page.md"
+if title_page.exists():
+    tp = title_page.read_text()
+    if re.search(r"draft\s*[—-]+\s*please", tp, re.I):
+        fail("title", "draft note survives in the title page")
+    m = re.search(r"\*\*Word count:\*\*\s*([\d,]+)\s+words", tp)
+    if m and docx_path.exists():
+        stated = int(m.group(1).replace(",", ""))
+        try:
+            from docx import Document
+            d2 = Document(str(docx_path))
+            words = sum(len(p.text.split()) for p in d2.paragraphs)
+            words += sum(len(c.text.split()) for t in d2.tables for r in t.rows for c in r.cells)
+            if abs(words - stated) > 0.03 * words:
+                fail("title", f"title page states {stated} words; docx holds about {words}")
+        except ImportError:
+            pass
+
+# ---------------------------------------------- 9 remaining r3 figures in the text
+if r3p.exists():
+    fb, fe = r3["fill"]["bakery"], r3["fill"]["electronics"]
+    more = [
+        (f"{fb['crossing_median']:.0f}", "bakery crossing median"),
+        (f"{round(fe['crossing_median'] + 1e-9):.0f}", "electronics crossing median"),
+        (f"{fb['crossing_min']} to {fb['crossing_max']}", "bakery crossing range"),
+        (f"{fe['crossing_min']} to {fe['crossing_max']}", "electronics crossing range"),
+    ]
+    ab = r3["ablate"]
+    def fmt(v, dec):
+        return f"{v:+.{dec}f}".replace("-", "−").replace("+0.", "+0.")
+    for key, dec in (("cumrate: cost-only minus shaped, cost per unit ($)", 2),
+                     ("episode: cost-only minus shaped, cost per unit ($)", 2),
+                     ("cumrate: cost-only minus shaped, joint satisfaction (pp)", 1),
+                     ("episode: cost-only minus shaped, joint satisfaction (pp)", 1)):
+        r = ab[key]
+        more.append((f"{fmt(r['difference'], dec)} [{fmt(r['ci_low'], dec)}, {fmt(r['ci_high'], dec)}]", key))
+    for in_text, what in more:
+        pat = re.escape(in_text).replace(r"\[", r"\$?\[").replace("−", "−\\$?").replace(r"\+", r"\+\$?")
+        if in_text not in TEXT and not re.search(pat, TEXT):
+            fail("r3", f"{what}: {in_text!r} absent from manuscript")
+    sel = r3["symsat"]["selection"]
+    for v, what in ((sel["checkpoints_validated"], "checkpoints validated"),
+                    (sel["checkpoints_qualifying"], "checkpoints qualifying")):
+        if not re.search(rf"\b{v}\b", TEXT):
+            fail("r3", f"{what} = {v} absent from manuscript")
+
 # ---------------------------------------------------------------------- report
 print(f"claim checks: {len(fails)} failures, {len(warns)} to review\n")
 for f in fails:

@@ -1,31 +1,31 @@
 {
  "ablate": {
-  "cumrate: shaped minus cost-only, cost per unit ($)": {
-   "ci_high": 4.057091970967,
-   "ci_low": -0.421864608217628,
-   "difference": 1.9288074560987667,
-   "p": 0.1018,
+  "cumrate: cost-only minus shaped, cost per unit ($)": {
+   "ci_high": 0.35818773940350723,
+   "ci_low": -3.9936229344251024,
+   "difference": -1.9288074560987667,
+   "p": 0.0958,
    "p_is_at_resolution_limit": false
   },
-  "cumrate: shaped minus cost-only, joint satisfaction (pp)": {
-   "ci_high": 8.0,
-   "ci_low": -32.4,
-   "difference": -11.600000000000001,
-   "p": 0.2524,
+  "cumrate: cost-only minus shaped, joint satisfaction (pp)": {
+   "ci_high": 31.999999999999993,
+   "ci_low": -7.599999999999994,
+   "difference": 11.600000000000001,
+   "p": 0.2552,
    "p_is_at_resolution_limit": false
   },
-  "episode: shaped minus cost-only, cost per unit ($)": {
-   "ci_high": 1.4685121809686863,
-   "ci_low": -2.066001162994392,
-   "difference": -0.22162942741918812,
-   "p": 0.8136,
+  "episode: cost-only minus shaped, cost per unit ($)": {
+   "ci_high": 2.0493508212339817,
+   "ci_low": -1.4231599953552663,
+   "difference": 0.22162942741918812,
+   "p": 0.8236,
    "p_is_at_resolution_limit": false
   },
-  "episode: shaped minus cost-only, joint satisfaction (pp)": {
-   "ci_high": 8.0,
-   "ci_low": -6.400000000000006,
-   "difference": 0.8000000000000114,
-   "p": 0.8824,
+  "episode: cost-only minus shaped, joint satisfaction (pp)": {
+   "ci_high": 6.0,
+   "ci_low": -8.0,
+   "difference": -0.8000000000000114,
+   "p": 0.8894,
    "p_is_at_resolution_limit": false
   }
  },
@@ -71,8 +71,9 @@
    "budget_episodes": 3142,
    "cap_at_episode": 1581,
    "crossing_max": 434,
-   "crossing_median": 184.0,
-   "crossing_min": 100,
+   "crossing_median": 185.0,
+   "crossing_min": 101,
+   "episodes_never_crossing": 1,
    "increment_needed_for_cap": 6.301718650541057,
    "increment_per_episode": 12.524104127131816,
    "mean_g_T": 0.0031310260317829537,
@@ -87,6 +88,7 @@
    "crossing_max": 399,
    "crossing_median": 193.5,
    "crossing_min": 101,
+   "episodes_never_crossing": 0,
    "increment_needed_for_cap": 5.906921241050119,
    "increment_per_episode": 21.640714187085628,
    "mean_g_T": 0.005410178546771407,

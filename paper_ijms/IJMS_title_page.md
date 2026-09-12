@@ -2,12 +2,12 @@
 title: "Objective, constraint and evaluation alignment in constrained reinforcement learning for multi-server flow-shop routing"
 ---
 
-**Khaled R. Alrashdan**^a,\*^
+**Khaled R. Alrashdan**\*
 
-^a^ Department of Manufacturing Engineering Technology, College of Technological
+Department of Manufacturing Engineering Technology, College of Technological
 Studies, Public Authority for Applied Education and Training (PAAET), Kuwait
 
-ORCID: 0000-0001-6304-9061
+ORCID: https://orcid.org/0000-0001-6304-9061
 
 \* Corresponding author. Khaled R. Alrashdan, Department of Manufacturing
 Engineering Technology, College of Technological Studies, Public Authority for
@@ -25,8 +25,7 @@ continuous line numbers.
 
 ---
 
-**Biographical note** *(draft — please check and amend before submission; a
-profile photograph must also be supplied at submission)*
+**Biographical note**
 
 Khaled R. Alrashdan is a faculty member in the Department of Manufacturing
 Engineering Technology, College of Technological Studies, at the Public

@@ -41,11 +41,10 @@ flow-shop routing, dispatching rules, benchmarking, production control
 ## 1. Introduction
 
 Reinforcement learning (RL) is now routinely proposed for routing and sequencing
-in production systems. Two recent systematic reviews [@mayerhoff2026slr;
-@schneider2026role] map a field validated almost entirely in simulation and
+in production systems. Two recent systematic reviews [1,2] map a field validated almost entirely in simulation and
 without standardised benchmarks, the larger of them across 196 studies, and a
 reproduction study in a neighbouring resource-allocation problem
-[@doherty2025hype] found properly tuned heuristics matching or beating every one
+[3] found properly tuned heuristics matching or beating every one
 of five landmark RL results. Work answering that critique concentrates on the
 baselines and the protocol. This
 paper argues that a second class of problem sits upstream of both, in the
@@ -63,14 +62,14 @@ disagree, aggregate performance figures do not reveal which is at fault, and the
 natural reading of a poor result is that the method does not work.
 
 This study measures three such breaks using Lagrangian proximal policy
-optimisation (PPO) [@schulman2017ppo] on two multi-server flow-shop testbeds,
+optimisation (PPO) [4] on two multi-server flow-shop testbeds,
 where the answer can be checked against tuned dispatching rules. The vehicle is
 the author's own earlier study, run under a protocol committed in advance, which
 reported that no seed satisfied throughput and utilisation constraints on a
 12-route electronics testbed and that the throughput multiplier saturated in
 every run. That study is referred to below as the initial study; its protocol,
 archived checkpoints and result files are in the companion repository
-[@flexflowsimcppo] and are the objects re-examined here.
+[5] and are the objects re-examined here.
 
 The first break is between the stated constraint and the training surrogate: the
 constraint is on an episode total, but the implemented signal penalised the
@@ -117,28 +116,27 @@ The two reviews cited above map a field that has shifted from value-based method
 to policy gradients, with PPO dominant, and that repeatedly reports strong
 performance against weak baselines and ambiguous performance against well-tuned
 heuristics. Recent job-shop and flow-shop work has converged on graph- and
-attention-based encoders trained with PPO [@li2025evolutionary; @liu2025gat;
-@shen2026transformer; @wang2025end]. An alternative to soft penalties is action
-masking [@ali2023masked; @tang2020mask; @zhang2025dual], which presupposes
+attention-based encoders trained with PPO [6,7,8,9]. An alternative to soft penalties is action
+masking [10,11,12], which presupposes
 infeasible actions and so does not apply to the fully feasible routing problem
 studied here; a parallel line evolves interpretable dispatching rules directly
-[@ferreira2022dispatching; @huang2025evolving] or learns to select among existing
-rules [@marques2025dynamic]. On
-benchmarking itself, Doherty and colleagues [@doherty2025hype] reproduce five
+[13,14] or learns to select among existing
+rules [15]. On
+benchmarking itself, Doherty and colleagues [3] reproduce five
 landmark RL studies in optical resource allocation with properly tuned heuristic
 baselines and find that simple heuristics consistently match or outperform the
 published results. On the two testbeds used here, Alrashdan
-[@alrashdan2026breakdowns] benchmarked dispatching rules, Thompson-sampling
+[16] benchmarked dispatching rules, Thompson-sampling
 bandits and unconstrained PPO under machine breakdowns, finding ShortestQueue
 ahead of PPO on cost per unit by 38–153% depending on disruption level; that
 study addressed neither constraints nor evaluation mode. Rinciog and Meyer
-[@rinciog2021fabricatio] introduced FabricatioRL, the closest comparator to the
+[17] introduced FabricatioRL, the closest comparator to the
 simulator used here.
 
 ### 2.2 Constrained MDPs, Lagrangian methods and evaluation practice
 
 The constrained Markov decision process (CMDP) formulation is due to Altman
-[@altman1999cmdp], who shows that a finite CMDP with K constraints under
+[18], who shows that a finite CMDP with K constraints under
 discounted cost admits an optimal stationary policy requiring at most K
 randomisations, and that optimal constrained policies generally require
 randomisation or time-sharing between deterministic policies. Those results are
@@ -146,11 +144,11 @@ stated for a setting different from ours, which is finite-horizon and uses
 function approximation; they are used here to motivate reporting stochastic as
 well as greedy evaluation, not to explain the learned policies. The modern
 policy-gradient pipeline begins with Constrained Policy Optimization
-[@achiam2017cpo]; Reward Constrained Policy Optimization [@tessler2019rcpo]
+[19]; Reward Constrained Policy Optimization [20]
 introduces the multi-timescale Lagrangian approach used here, and Paternain and
-colleagues [@paternain2019duality] prove a zero duality gap underwriting
+colleagues [21] prove a zero duality gap underwriting
 primal-dual methods despite the non-convexity of policy optimisation. Stooke and
-colleagues [@stooke2020pid] are the closest methodological precedent: the
+colleagues [22] are the closest methodological precedent: the
 standard Lagrangian update behaves as integral control on the violation signal,
 producing oscillation and overshoot, which a PID controller on the multiplier
 damps.
@@ -158,9 +156,9 @@ damps.
 That literature analyses dual dynamics given a constraint signal, and has little
 to say about whether the signal fed to the dual update is the constraint the
 paper claims to impose, which is the gap this study occupies. On the evaluation
-side, Henderson and colleagues [@henderson2018matters] showed that reported
+side, Henderson and colleagues [23] showed that reported
 deep-RL results are sensitive to protocol choices that are rarely stated, and
-Agarwal and colleagues [@agarwal2021precipice] that point estimates over a
+Agarwal and colleagues [24] that point estimates over a
 handful of runs routinely misstate both the level and the uncertainty of
 performance. Whether a stochastic policy is evaluated by sampling or by its mode
 is one such choice, usually left to a library default; for a near-uniform policy
@@ -186,11 +184,11 @@ stationary over an episode. Appendix C, Table C1, lists the symbols.
 
 The bakery testbed has two stages of two servers, giving 4 routes, each pairing a
 fast expensive machine with a slow cheap one, service times calibrated to the
-BK50 subset of a bakery dataset [@babor2022bakery]. The electronics testbed has
+BK50 subset of a bakery dataset [25]. The electronics testbed has
 three stages of 2, 3 and 2 servers, giving 12 routes, with asymmetric capacities
 and one over-provisioned station. Table A1 gives the arrival, service and cost
 parameters; both instances are defined in the configuration files of
-[@flexflowsimcppo] and were introduced in [@alrashdan2026breakdowns], whose
+[5] and were introduced in [16], whose
 breakdown extensions are unused here. Both lines are capacity-limited: the
 bakery baking stage can complete about 23 jobs per shift against about 50
 arrivals, and the electronics soldering stage about 73 against about 80. The
@@ -440,7 +438,7 @@ each constraint on at least 16 of 20 validation episodes, or the lowest
 overall if none qualifies, with the run marked a fallback. Cost per unit is
 computed per episode and averaged. Confidence intervals across seeds are 95%
 two-sided t-intervals; those in Table 1, across episodes, are not directly
-comparable. PPO is the Stable-Baselines3 implementation [@raffin2021sb3] with
+comparable. PPO is the Stable-Baselines3 implementation [26] with
 the initial study's hyperparameters, listed with the dual parameters in
 Appendix A.
 
@@ -579,7 +577,7 @@ approximation, greedy-action variance over near-uniform distributions.
 
 The initial study's checkpoints were re-evaluated without retraining — the
 one-sided Lagrangian of Section 4.2 and a PID-Lagrangian comparator in the manner
-of Stooke and colleagues [@stooke2020pid], driven by the same cumulative-rate
+of Stooke and colleagues [22], driven by the same cumulative-rate
 signal after exponential smoothing (Appendix A.2) — on both testbeds and every
 archived seed. Applied to the archived validation sweep, the original greedy rule
 reproduces the selected checkpoint in 18 of 18 runs and the test figures to the
@@ -868,7 +866,7 @@ Three consequences follow. If cost per unit is the criterion, the objective
 should be aligned with it, by a ratio objective or a throughput term weighted by
 that metric, not by a constraint; a per-departure bonus of that kind narrowed but
 did not close the gap to ShortestQueue for unconstrained PPO on these testbeds
-[@alrashdan2026breakdowns]. A total-cost CMDP is legitimate but should then be
+[16]. A total-cost CMDP is legitimate but should then be
 judged on total cost. And the constraint enforced should be the constraint
 checked: a joint per-episode criterion needs a per-episode formulation, a
 violation-indicator penalty or a conditional-value-at-risk constraint on the
@@ -1013,14 +1011,66 @@ multiplier history and per-episode test record supporting the results reported
 here are openly available in the FlexFlowSim-CPPO repository at
 https://github.com/alrashdank/flexflowsim-cppo (branch `ablation-slack-fix`).
 The bakery service-time data are from the openly available dataset of Babor
-[@babor2022bakery].
+[25].
 
 ## References
+
+1. Mayerhoff J, Schmidt M. Reinforcement learning for autonomous production planning and control: a systematic literature review. J Manuf Syst. 2026;86:546–568. doi:10.1016/j.jmsy.2026.03.023.
+
+2. Schneider J, Pfannschmidt C, Nyhuis P, Schmidt M. The role of reinforcement learning in production control: a systematic literature review. IEEE Access. 2026;14:34375–34389. doi:10.1109/ACCESS.2026.3668903.
+
+3. Doherty M, Matzner R, Sadeghi R, Bayvel P, Beghelli A. Reinforcement learning for dynamic resource allocation in optical networks: hype or hope? J Opt Commun Netw. 2025;17(9):D1–D17. doi:10.1364/JOCN.559990.
+
+4. Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O. Proximal policy optimization algorithms. arXiv:1707.06347; 2017. doi:10.48550/arXiv.1707.06347.
+
+5. Alrashdan KR. FlexFlowSim-CPPO: simulator, protocol documents and archived results [software]. GitHub; 2026 [cited 2026 Sep 12]. Available from: https://github.com/alrashdank/flexflowsim-cppo
+
+6. Li C, Zhao X, Lin L, Zhang W, Gen M, Zhang Q. An evolutionary knowledge training-based proximal policy optimization algorithm for job shop scheduling in flexible intelligent manufacturing. Comput Ind Eng. 2025;210:111533. doi:10.1016/j.cie.2025.111533.
+
+7. Liu Y, Fan J, Shen W. A deep reinforcement learning approach with graph attention network and multi-signal differential reward for dynamic hybrid flow shop scheduling problem. J Manuf Syst. 2025;80:643–661. doi:10.1016/j.jmsy.2025.03.028.
+
+8. Shen Y, Zhang X, Jin T. Transformer-based multi-agent reinforcement learning for flexible job shop scheduling with AGVs. Appl Soft Comput. 2026;193:114899. doi:10.1016/j.asoc.2026.114899.
+
+9. Wang R, Jing Y, Gu C, He S, Chen J. End-to-end multitarget flexible job shop scheduling with deep reinforcement learning. IEEE Internet Things J. 2025;12(4):4420–4434. doi:10.1109/JIOT.2024.3485748.
+
+10. Ali AM, Tirel L. Action masked deep reinforcement learning for controlling industrial assembly lines. In: 2023 IEEE World AI IoT Congress (AIIoT); 2023. p. 797–803. doi:10.1109/AIIoT58121.2023.10174426.
+
+11. Tang CY, Liu CH, Chen WK, You SD. Implementing action mask in proximal policy optimization (PPO) algorithm. ICT Express. 2020;6(3):200–203. doi:10.1016/j.icte.2020.05.003.
+
+12. Zhang N, Liu B, Zhang J. Dual resource scheduling method of production equipment and rail-guided vehicles based on proximal policy optimization algorithm. Technologies. 2025;13(12):573. doi:10.3390/technologies13120573.
+
+13. Ferreira C, Figueira G, Amorim P. Effective and interpretable dispatching rules for dynamic job shops via guided empirical learning. Omega. 2022;111:102643. doi:10.1016/j.omega.2022.102643.
+
+14. Huang Z, Mei Y, Zhang F, Zhang M. Toward evolving dispatching rules with flow control operations by grammar-guided linear genetic programming. IEEE Trans Evol Comput. 2025;29(1):217–231. doi:10.1109/TEVC.2024.3353207.
+
+15. Marques N, Figueira G, Guimarães L. Dynamic dispatching rule selection for the job shop scheduling problem. Comput Ind Eng. 2025;210:111471. doi:10.1016/j.cie.2025.111471.
+
+16. Alrashdan KR. Routing under machine breakdowns: a benchmark of dispatching rules, bandits, and reinforcement learning for multi-server flow shops. J King Saud Univ Eng Sci. 2026;38(7):55. doi:10.1007/s44444-026-00128-9.
+
+17. Rinciog A, Meyer A. Fabricatio-RL: a reinforcement learning simulation framework for production scheduling. In: Proceedings of the 2021 Winter Simulation Conference; 2021. p. 1–12. doi:10.1109/WSC52266.2021.9715366.
+
+18. Altman E. Constrained Markov decision processes. Boca Raton (FL): Chapman & Hall/CRC; 1999.
+
+19. Achiam J, Held D, Tamar A, Abbeel P. Constrained policy optimization. In: Proceedings of the 34th International Conference on Machine Learning. PMLR 70; 2017. p. 22–31.
+
+20. Tessler C, Mankowitz DJ, Mannor S. Reward constrained policy optimization. In: 7th International Conference on Learning Representations; 2019.
+
+21. Paternain S, Chamon LFO, Calvo-Fullana M, Ribeiro A. Constrained reinforcement learning has zero duality gap. In: Advances in Neural Information Processing Systems 32; 2019. p. 7553–7563.
+
+22. Stooke A, Achiam J, Abbeel P. Responsive safety in reinforcement learning by PID Lagrangian methods. In: Proceedings of the 37th International Conference on Machine Learning. PMLR 119; 2020. p. 9133–9143.
+
+23. Henderson P, Islam R, Bachman P, Pineau J, Precup D, Meger D. Deep reinforcement learning that matters. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence; 2018. p. 3207–3214. doi:10.1609/aaai.v32i1.11694.
+
+24. Agarwal R, Schwarzer M, Castro PS, Courville A, Bellemare MG. Deep reinforcement learning at the edge of the statistical precipice. In: Advances in Neural Information Processing Systems 34; 2021. p. 29304–29320.
+
+25. Babor M. Small and medium-sized bakery production data for scheduling. Version 2 [dataset]. Mendeley Data; 2022. doi:10.17632/dhgbssb8ns.2.
+
+26. Raffin A, Hill A, Gleave A, Kanervisto A, Ernestus M, Dormann N. Stable-Baselines3: reliable reinforcement learning implementations. J Mach Learn Res. 2021;22(268):1–8.
 
 ## Appendix A. Reproducibility
 
 **A.1 Software.** All experiments use the FlexFlowSim-CPPO simulator
-[@flexflowsimcppo]. The testbeds are defined in `configs/bakery_bk50.json` and
+[5]. The testbeds are defined in `configs/bakery_bk50.json` and
 `configs/electronics_3stage.json`. The original Lagrangian wrapper is
 `pilot_constrained_v4_auto.py`; the corrected wrapper, which also reproduces the
 original signal as a control mode and provides the symmetric variant, is

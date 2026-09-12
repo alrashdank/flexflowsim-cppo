@@ -21,7 +21,7 @@ def widths_for(t,font_pt):
     flex=[p-m for p,m in zip(prefs,mins)]; need=tot-TEXT_W
     if sum(flex)<=0: return [m*TEXT_W/sum(mins) for m in mins]
     k=min(1,need/sum(flex)); return [p-f*k for p,f in zip(prefs,flex)]
-HDR={"Q1 argmax CPU ± CI (published)":"Q1 argmax CPU ± CI (publ.)","Q1 stochastic CPU ± CI":"Q1 stoch. CPU ± CI","Q2 stochastic CPU ± CI":"Q2 stoch. CPU ± CI","Q2 val.-satisfied":"Q2 val.-sat.","λ_T at cap":"λ_T capped","val.-satisfied":"val.-sat."}
+HDR={"Q1 greedy CPU ± CI":"Q1 greedy CPU ± CI","Q1 greedy joint sat.":"Q1 greedy sat.","Q1 stochastic CPU ± CI":"Q1 stoch. CPU ± CI","Q1 stochastic joint sat.":"Q1 stoch. sat.","Q2 stochastic CPU ± CI":"Q2 stoch. CPU ± CI","Q2 joint sat.":"Q2 sat.","Q2 val.-satisfied":"Q2 val.-sat.","Val.-satisfied":"Val.-sat.","Stochastic joint sat.":"Stoch. joint sat.","Greedy joint sat.":"Greedy joint sat.","Stochastic CPU ± CI":"Stoch. CPU ± CI","Greedy CPU ± CI":"Greedy CPU ± CI","Stochastic TP":"Stoch. TP"}
 d=Document(sys.argv[1])
 for t in d.tables:
     n=len(t.columns); font=9.5 if n<=6 else (9 if n<=8 else 8.5)

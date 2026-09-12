@@ -24,7 +24,8 @@ cost        Section 6.7.  Paired hierarchical bootstrap on TOTAL episode cost,
             the objective the CMDP actually minimises, which the R2 analysis
             reported only as point estimates.
 ablate      Section 6.1.  Paired hierarchical bootstrap on the 2x2 pilot cells,
-            isolating the base reward with the slack signal held fixed.
+            isolating the base reward with the slack signal held fixed; the
+            difference is cost-only minus shaped, as the text states it.
 """
 
 import json
@@ -52,7 +53,7 @@ TESTBED = {
 # ----------------------------------------------------------------- fill phase
 def block_fill():
     """Section 4.2: how far below its floor the cumulative rate sits, and what
-    that implies for the one-sided dual update, for an oracle dispatching rule."""
+    that implies for the one-sided dual update, under a fixed dispatching rule."""
     from env import FlexFlowSimEnv
     from lagrangian_slack import SlackLagrangianFlowEnv
     from baselines import ShortestQueuePolicy
@@ -85,7 +86,7 @@ def block_fill():
                         pos += 1
                     elif first is None:
                         first = t
-            crossings.append(first if first else WARM)
+            crossings.append(first)          # None if the floor is never reached
             viol_frac.append(pos / n)
         wrap.reset(seed=11050)          # flush the final dual update
 
@@ -93,8 +94,9 @@ def block_fill():
         mean_g = float(gaps.mean())
         incr = ETA_T * mean_g
         need = (LAM_T_CAP - LAM_T0) / cfg["episodes"]
-        cross = np.array(crossings)
+        crossed = np.array([c for c in crossings if c is not None])
         out[tb] = dict(
+            episodes_never_crossing=int(sum(c is None for c in crossings)),
             n_episodes=int(gaps.size),
             mean_g_T=mean_g,
             increment_per_episode=incr,
@@ -103,9 +105,9 @@ def block_fill():
             saturates_within_budget=bool(incr >= need),
             cap_at_episode=int(np.ceil((LAM_T_CAP - LAM_T0) / incr)),
             budget_episodes=cfg["episodes"],
-            crossing_median=float(np.median(cross)),
-            crossing_min=int(cross.min()),
-            crossing_max=int(cross.max()),
+            crossing_median=float(np.median(crossed)),
+            crossing_min=int(crossed.min()),
+            crossing_max=int(crossed.max()),
             violating_step_fraction=float(np.mean(viol_frac)),
         )
     return out
@@ -263,9 +265,9 @@ def block_ablate():
     for slack in ("cumrate", "episode"):
         for metric, label in (("cpu", "cost per unit ($)"),
                               ("joint", "joint satisfaction (pp)")):
-            out[f"{slack}: shaped minus cost-only, {label}"] = _hboot(
-                stack(f"shaped-{slack}", metric),
-                stack(f"cost-{slack}", metric), rng)
+            out[f"{slack}: cost-only minus shaped, {label}"] = _hboot(
+                stack(f"cost-{slack}", metric),
+                stack(f"shaped-{slack}", metric), rng)
     return out
 
 
