@@ -1,0 +1,10 @@
+# Exact versions used for every run reported in the IJMS manuscript, as recorded
+# in each checkpoint's system_info.txt (Python 3.11.15, CPU only).
+simpy==4.1.2
+gymnasium==1.3.0
+stable-baselines3==2.9.0
+torch==2.13.0
+numpy==2.4.4
+scipy==1.17.1
+pandas==3.0.2
+matplotlib==3.10.9

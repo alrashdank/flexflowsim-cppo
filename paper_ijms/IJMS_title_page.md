@@ -16,8 +16,8 @@ kr.alrashdan@paaet.edu.kw
 
 **Article type:** Research Article
 
-**Word count:** 12,400 words in the manuscript file (word-processor count of
-the .docx, 12,381), of which approximately 7,600 are main text (Sections 1–9);
+**Word count:** 12,600 words in the manuscript file (word-processor count of
+the .docx, 12,609), of which approximately 7,800 are main text (Sections 1–9);
 the remainder is the abstract, the tables, the references and Appendices A–C.
 The main text contains 5 tables and 2 figures; Appendix A contains a parameter
 table, Appendix B 3 supplementary tables and Appendix C a nomenclature table.
@@ -46,16 +46,17 @@ the public, commercial, or not-for-profit sectors.
 to declare.
 
 **Declaration of generative AI use.** During the preparation of this work the
-corresponding author used a large language model assistant (Claude, Anthropic)
-to assist with simulation code, analysis scripting, drafting and editing. The
-author verified all results and takes full responsibility for the content of the
-article.
+corresponding author used a large language model assistant (Claude, Anthropic;
+models Claude Opus 5, Claude Fable 5 and Claude Fable 5.1, accessed through
+Claude Code) to assist with simulation code, analysis scripting, drafting and
+editing. The author verified all results and takes full responsibility for the
+content of the article.
 
 **Data availability.** The simulator, the Lagrangian wrappers, the three protocol
 documents, the deviation record, all runner and analysis scripts, and every
 per-seed summary, multiplier history and per-episode test record supporting the
-results are openly available at https://github.com/alrashdank/flexflowsim-cppo
-(branch `ablation-slack-fix`).
+results are openly available at https://github.com/alrashdank/flexflowsim-cppo,
+tag `ijms-submission` on branch `ablation-slack-fix`.
 
 **CRediT.** Khaled R. Alrashdan: Conceptualization, Methodology, Software,
 Investigation, Formal analysis, Data curation, Visualization, Writing – original

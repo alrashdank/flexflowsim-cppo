@@ -251,6 +251,14 @@ BANNED = [
     (r"pre-specified family of ten|prespecified family of ten", "the family of ten was defined after the R1 runs"),
     (r"\bpublished (?:signal|cell|wrapper|configuration)\b", "the initial study is unpublished"),
     (r"\b(?:was|were|has been|have been) (?:published|submitted)\b", "the initial study is unpublished; check the sentence"),
+    (r"infeasible for any policy", "a 0.50 floor on the third-stage fast server is feasible (about 0.6 if all work is routed to it)"),
+    (r"truncated[- ]normal|truncated below", "service times are clipped normal draws (env.py: max(normal, floor))"),
+    (r"is the joint satisfaction rate itself", "negative penalty is implied by joint satisfaction, not equal to it"),
+    (r"does not\s+cross until", "crossing time is not determined by the final throughput"),
+    (r"explains the residual result", "narrow to 'accounts for the direction of'"),
+    (r"on the stated CMDP therefore", "the cell optimises a discounted, aggregate-utilisation surrogate"),
+    (r"for practical purposes it\s+was that objective", "say 'numerically'"),
+    (r"\b(?:both|either) metrics?\b", "name the two metrics"),
 ]
 for pat, why in BANNED:
     for i, l in locate(pat):
@@ -362,6 +370,24 @@ if r3p.exists():
         pat = re.escape(in_text).replace(r"\[", r"\$?\[").replace("−", "−\\$?").replace(r"\+", r"\+\$?")
         if in_text not in TEXT and not re.search(pat, TEXT):
             fail("r3", f"{what}: {in_text!r} absent from manuscript")
+    if "negpen" in r3:
+        rules = ("ShortestQueue", "LeastUtilised", "RoundRobin", "UniformRandom")
+        lo = min(min(r3["negpen"][tb][r]["negative_at_final_by_seed"]) for tb in r3["negpen"] for r in rules)
+        hi = max(max(r3["negpen"][tb][r]["negative_at_final_by_seed"]) for tb in r3["negpen"] for r in rules)
+        clo = min(r3["negpen"][tb]["corrected (own final multipliers)"]["negative"] for tb in r3["negpen"])
+        chi = max(r3["negpen"][tb]["corrected (own final multipliers)"]["negative"] for tb in r3["negpen"])
+        for in_text, what in ((f"{100*lo:.0f}–{100*hi:.0f}% of the rules' episodes", "negative-penalty range, rules"),
+                              (f"{100*clo:.0f}–{100*chi:.0f}%\nof the corrected cell's", "negative-penalty range, corrected")):
+            if in_text not in TEXT and in_text.replace("\n", " ") not in TEXT:
+                fail("r3", f"{what}: {in_text!r} absent from manuscript")
+        fb2 = r3["fill"]["bakery"]
+        fc, ba = fb2["at_floor_first_crossing"], fb2["at_floor_steps_below_after"]
+        for in_text, what in ((f"steps {min(fc)} to {max(fc)}", "at-floor first-crossing range"),
+                              (f"{min(ba)} to {max(ba)}\nfurther steps", "at-floor steps below after crossing"),
+                              (f"{fb2['spearman_tp_vs_first_crossing']:.2f}".replace("-", "−"), "Spearman bakery"),
+                              (f"{r3['fill']['electronics']['spearman_tp_vs_first_crossing']:.2f}".replace("-", "−"), "Spearman electronics")):
+            if in_text not in TEXT and in_text.replace("\n", " ") not in TEXT:
+                fail("r3", f"{what}: {in_text!r} absent from manuscript")
     sel = r3["symsat"]["selection"]
     for v, what in ((sel["checkpoints_validated"], "checkpoints validated"),
                     (sel["checkpoints_qualifying"], "checkpoints qualifying")):

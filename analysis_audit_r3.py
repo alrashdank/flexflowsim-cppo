@@ -26,6 +26,11 @@ cost        Section 6.7.  Paired hierarchical bootstrap on TOTAL episode cost,
 ablate      Section 6.1.  Paired hierarchical bootstrap on the 2x2 pilot cells,
             isolating the base reward with the slack signal held fixed; the
             difference is cost-only minus shaped, as the text states it.
+negpen      Section 6.4.  Fraction of test episodes on which the episode-level
+            penalty of Eq. (7) is negative, for the load-spreading rules and
+            the corrected cell, at the initial multipliers and at those each
+            corrected seed reached by training's end, against the joint
+            satisfaction rate (a lower bound on it, not equal to it).
 """
 
 import json
@@ -69,25 +74,30 @@ def block_fill():
         pol = ShortestQueuePolicy(base)
         pol.env = base
 
-        crossings, viol_frac = [], []
+        crossings, viol_frac, per_episode = [], [], []
         for s in TEST_SEEDS:
             obs, _ = wrap.reset(seed=s)
-            done, t, first, pos, n = False, 0, None, 0, 0
+            done, t, first, pos, n, below_after, tp = False, 0, None, 0, 0, 0, 0.0
             while not done:
                 obs, _, term, trunc, info = wrap.step(pol.predict(obs))
                 done = term or trunc
                 t += 1
+                dep = float(info.get("total_departed", 0))
+                st = float(info.get("sim_time", t))
+                g_raw = cfg["t_min"] / H - dep / max(st, 1e-9)
                 if t > WARM:
-                    dep = float(info.get("total_departed", 0))
-                    st = float(info.get("sim_time", t))
-                    g = max(0.0, cfg["t_min"] / H - dep / max(st, 1e-9))
                     n += 1
-                    if g > 0:
+                    if g_raw > 0:
                         pos += 1
                     elif first is None:
                         first = t
+                if first is not None and g_raw > 0:
+                    below_after += 1     # the rate fell back below the floor
+                tp = dep
             crossings.append(first)          # None if the floor is never reached
             viol_frac.append(pos / n)
+            per_episode.append(dict(tp=tp, first_crossing=first,
+                                    steps_below_after_crossing=below_after))
         wrap.reset(seed=11050)          # flush the final dual update
 
         gaps = np.array([h["tp_gap"] for h in wrap.lambda_history])
@@ -95,7 +105,21 @@ def block_fill():
         incr = ETA_T * mean_g
         need = (LAM_T_CAP - LAM_T0) / cfg["episodes"]
         crossed = np.array([c for c in crossings if c is not None])
+        # Episodes finishing exactly at the floor: when they cross and how long
+        # they spend below it afterwards (Section 4.2).
+        at_floor = [e for e in per_episode if e["tp"] == cfg["t_min"]]
+        from scipy.stats import spearmanr
+        rho = spearmanr([e["tp"] for e in per_episode],
+                        [e["first_crossing"] if e["first_crossing"] else H + 1
+                         for e in per_episode]).correlation
         out[tb] = dict(
+            at_floor_n=len(at_floor),
+            at_floor_first_crossing=[e["first_crossing"] for e in at_floor],
+            at_floor_steps_below_after=[e["steps_below_after_crossing"]
+                                        for e in at_floor],
+            never_crossing_tp=[e["tp"] for e in per_episode
+                               if e["first_crossing"] is None],
+            spearman_tp_vs_first_crossing=float(rho),
             episodes_never_crossing=int(sum(c is None for c in crossings)),
             n_episodes=int(gaps.size),
             mean_g_T=mean_g,
@@ -271,13 +295,68 @@ def block_ablate():
     return out
 
 
+def block_negpen():
+    """Section 6.4: how often the Eq. (7) penalty is negative on the test
+    episodes.  Joint satisfaction implies a negative penalty but not conversely,
+    so the negative fraction is at least the joint rate."""
+    import csv
+    import glob
+
+    out = {}
+    for tb, cfg in TESTBED.items():
+        t_min = cfg["t_min"]
+        base = json.load(open(f"results_r1/r2/episodes_{tb}_base.json"))
+        rl = json.load(open(f"results_r1/r2/episodes_{tb}_rl.json"))
+        final = {}
+        for f in sorted(glob.glob(
+                f"results_r1/{tb}/cost-episode/seed_*/lambda_history.csv")):
+            rows = list(csv.DictReader(open(f)))
+            seed = f.split("seed_")[1].split("/")[0]
+            final[seed] = (float(rows[-1]["lam_tp"]), float(rows[-1]["lam_util"]))
+
+        def frac(eps, lam_t, lam_u):
+            pen = np.array([lam_t * (t_min - e["tp"])
+                            + lam_u * H * sum(U_MIN - e["util"][i] for i in FAST)
+                            for e in eps])
+            joint = np.array([e["tp"] >= t_min
+                              and all(e["util"][i] >= U_MIN for i in FAST)
+                              for e in eps])
+            return float((pen < 0).mean()), float(joint.mean())
+
+        res = {}
+        for name in ("ShortestQueue", "LeastUtilised", "RoundRobin",
+                     "UniformRandom"):
+            eps = base[f"baseline/{name}"]
+            neg0, joint = frac(eps, LAM_T0, 5.0)
+            negf = [frac(eps, *final[s])[0] for s in sorted(final)]
+            res[name] = dict(joint=joint, negative_at_initial=neg0,
+                             negative_at_final_by_seed=negf)
+        negs, joints = [], []
+        for s, (lt, lu) in sorted(final.items()):
+            n_, j_ = frac(rl[f"cost-episode/seed_{s}/stoch"], lt, lu)
+            negs.append(n_)
+            joints.append(j_)
+        res["corrected (own final multipliers)"] = dict(
+            joint=float(np.mean(joints)), negative=float(np.mean(negs)),
+            negative_by_seed=negs)
+        res["final_multipliers"] = final
+        out[tb] = res
+    return out
+
+
 BLOCKS = {"fill": block_fill, "lambda": block_lambda, "symsat": block_symsat,
-          "cost": block_cost, "ablate": block_ablate}
+          "cost": block_cost, "ablate": block_ablate, "negpen": block_negpen}
 
 
 def main():
     wanted = sys.argv[1:] or list(BLOCKS)
     result = {}
+    if wanted != list(BLOCKS):
+        try:                      # running a subset: keep the other blocks' output
+            with open("r3_numbers.json") as fh:
+                result = json.load(fh)
+        except FileNotFoundError:
+            pass
     for name in wanted:
         if name not in BLOCKS:
             raise SystemExit(f"unknown block {name!r}; choose from {list(BLOCKS)}")

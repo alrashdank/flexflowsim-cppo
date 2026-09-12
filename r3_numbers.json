@@ -68,6 +68,21 @@
  },
  "fill": {
   "bakery": {
+   "at_floor_first_crossing": [
+    236,
+    421,
+    292,
+    283,
+    434
+   ],
+   "at_floor_n": 5,
+   "at_floor_steps_below_after": [
+    153,
+    49,
+    156,
+    146,
+    3
+   ],
    "budget_episodes": 3142,
    "cap_at_episode": 1581,
    "crossing_max": 434,
@@ -78,11 +93,18 @@
    "increment_per_episode": 12.524104127131816,
    "mean_g_T": 0.0031310260317829537,
    "n_episodes": 50,
+   "never_crossing_tp": [
+    17.0
+   ],
    "saturates_within_budget": true,
    "slack_needed_for_cap": 0.001575429662635264,
+   "spearman_tp_vs_first_crossing": -0.7368235409075196,
    "violating_step_fraction": 0.44918205804749334
   },
   "electronics": {
+   "at_floor_first_crossing": [],
+   "at_floor_n": 0,
+   "at_floor_steps_below_after": [],
    "budget_episodes": 3352,
    "cap_at_episode": 915,
    "crossing_max": 399,
@@ -93,8 +115,10 @@
    "increment_per_episode": 21.640714187085628,
    "mean_g_T": 0.005410178546771407,
    "n_episodes": 50,
+   "never_crossing_tp": [],
    "saturates_within_budget": true,
    "slack_needed_for_cap": 0.0014767303102625297,
+   "spearman_tp_vs_first_crossing": -0.7735561004273716,
    "violating_step_fraction": 0.3138786279683377
   }
  },
@@ -245,6 +269,166 @@
     "episodes": 3352,
     "final_lam_T": 20000.0,
     "mean_increment_to_cap": 45.5668526280407
+   }
+  }
+ },
+ "negpen": {
+  "bakery": {
+   "LeastUtilised": {
+    "joint": 0.9,
+    "negative_at_final_by_seed": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "negative_at_initial": 1.0
+   },
+   "RoundRobin": {
+    "joint": 0.88,
+    "negative_at_final_by_seed": [
+     0.98,
+     1.0,
+     0.98,
+     0.98,
+     0.98
+    ],
+    "negative_at_initial": 1.0
+   },
+   "ShortestQueue": {
+    "joint": 0.96,
+    "negative_at_final_by_seed": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "negative_at_initial": 1.0
+   },
+   "UniformRandom": {
+    "joint": 0.9,
+    "negative_at_final_by_seed": [
+     0.98,
+     1.0,
+     0.98,
+     0.98,
+     0.98
+    ],
+    "negative_at_initial": 1.0
+   },
+   "corrected (own final multipliers)": {
+    "joint": 0.944,
+    "negative": 0.9960000000000001,
+    "negative_by_seed": [
+     1.0,
+     1.0,
+     1.0,
+     0.98,
+     1.0
+    ]
+   },
+   "final_multipliers": {
+    "123": [
+     2691.666666666671,
+     18.124999999999996
+    ],
+    "2024": [
+     3066.6666666666706,
+     48.5
+    ],
+    "42": [
+     3158.33333333334,
+     24.291666666666664
+    ],
+    "7": [
+     3616.666666666677,
+     20.458333333333336
+    ],
+    "999": [
+     2525.0,
+     21.66666666666667
+    ]
+   }
+  },
+  "electronics": {
+   "LeastUtilised": {
+    "joint": 0.98,
+    "negative_at_final_by_seed": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "negative_at_initial": 1.0
+   },
+   "RoundRobin": {
+    "joint": 0.86,
+    "negative_at_final_by_seed": [
+     0.92,
+     0.94,
+     0.92,
+     0.92,
+     0.92
+    ],
+    "negative_at_initial": 0.94
+   },
+   "ShortestQueue": {
+    "joint": 1.0,
+    "negative_at_final_by_seed": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "negative_at_initial": 1.0
+   },
+   "UniformRandom": {
+    "joint": 0.78,
+    "negative_at_final_by_seed": [
+     0.88,
+     0.94,
+     0.88,
+     0.88,
+     0.88
+    ],
+    "negative_at_initial": 0.9
+   },
+   "corrected (own final multipliers)": {
+    "joint": 0.952,
+    "negative": 0.9800000000000001,
+    "negative_by_seed": [
+     1.0,
+     0.96,
+     0.98,
+     0.98,
+     0.98
+    ]
+   },
+   "final_multipliers": {
+    "123": [
+     3558.333333333333,
+     70.16666666666667
+    ],
+    "2024": [
+     7741.666666666659,
+     255.45833333333337
+    ],
+    "42": [
+     7858.333333333327,
+     105.45833333333331
+    ],
+    "7": [
+     3800.0000000000005,
+     48.74999999999999
+    ],
+    "999": [
+     3533.333333333332,
+     40.95833333333333
+    ]
    }
   }
  },

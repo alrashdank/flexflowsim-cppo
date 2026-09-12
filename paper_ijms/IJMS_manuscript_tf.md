@@ -12,29 +12,23 @@ kr.alrashdan@paaet.edu.kw · ORCID: https://orcid.org/0000-0001-6304-9061
 
 ## Abstract
 
-Constrained reinforcement learning is increasingly applied to production
-routing, but a reported result rests on a chain of choices seldom reported
-together: the constraint stated, the surrogate the training loop penalises, the
-scale of the multipliers, the evaluation mode, and the metric reported. This
-simulation study measures what happens when links in that chain disagree, using
-Lagrangian proximal policy optimisation (PPO) on two capacity-limited flow-shop
-testbeds with 4 and 12 routes. Implementing an episode-level throughput
-constraint as a per-step penalty on the cumulative rate drives the multiplier to
-its cap for every trained policy, and by the same arithmetic would do so for a
-dispatching rule that satisfies the constraint with a 14–23% margin, because that
-rate sits below its floor while the line fills: 10 of 10 seeds saturate with this
-signal, 0 of 10 with an episode-level slack. Evaluating near-uniform stochastic
-policies greedily measures a router selected by unstable logit differences; on
-the 12-route testbed, sampling instead raises joint constraint satisfaction on
-the archived checkpoints from 6% to 71% without retraining, and correcting the
-slack signal raises it from 70% to 95% in new runs. The agent is nonetheless not
-distinguishable from round-robin routing on cost per unit at five seeds, and is
-6.6% more expensive than ShortestQueue. Giving the dual the scale of the reward
-makes it behave as a dual and the policy becomes state-dependent, but its
-training throughput falls towards the floor as a total-cost objective directs and
-the checkpoints retained are no better on the reported metric than stateless
-routing, because on a capacity-limited line total cost is nearly flat in routing
-while cost per unit falls with throughput.
+A constrained reinforcement learning result rests on choices seldom stated
+together: the constraint posed, the training surrogate, the multiplier scale,
+the evaluation mode and the metric reported. This simulation study measures what
+happens when they disagree, using Lagrangian proximal policy optimisation (PPO)
+on two flow-shop testbeds. Implementing an episode-level throughput constraint
+as a per-step penalty on the cumulative rate drives the multiplier to its cap
+for every trained policy and for a rule that satisfies the constraint with
+margin: 10 of 10 seeds saturate with this signal, 0 of 10 with episode-level
+slack. Greedy evaluation of near-uniform stochastic policies measures a router
+selected by unstable logit differences; sampling raises joint constraint
+satisfaction on archived checkpoints from 6% to 71% without retraining, and
+correcting the slack signal raises it from 70% to 95% in new runs. The corrected
+agent is not distinguishable from round-robin routing on cost per unit and is
+6.6% more expensive than ShortestQueue. A reward-scaled dual behaves as a dual,
+but the policy moves towards the throughput floor as a total-cost objective
+directs and is no better than stateless routing: on a capacity-limited line
+total cost is nearly flat in routing while cost per unit falls with throughput.
 
 **Keywords:** discrete-event simulation, constrained reinforcement learning,
 flow-shop routing, dispatching rules, benchmarking, production control
@@ -95,10 +89,10 @@ protocol amendment before its runs, gives the multipliers the scale of the rewar
 and a symmetric update; the dual then behaves as a dual and the policy becomes
 state-dependent, but its training throughput falls towards the floor as a
 total-cost objective directs, and the checkpoints the selection rule retains sit
-at the throughput of random routing (Section 6.7). The mechanism is measurable
-across the seven load-spreading policies of the 12-route testbed: total episode
-cost spans 4.6% while throughput spans 15.5%, so an agent minimising total cost
-has no reason to buy throughput above its floor.
+at the throughput of random routing (Section 6.7), which also measures the mechanism
+directly: on a capacity-limited line total cost is nearly flat in routing while
+cost per unit falls with throughput, so an agent minimising total cost has no
+reason to buy throughput above its floor.
 
 The scope of these results should be stated plainly. The first two breaks are
 properties of the instrumentation, not of constrained RL. Correcting them does
@@ -166,9 +160,13 @@ the two modes measure different objects.
 
 The simulator represents a flow shop of N stages, stage s holding \(m_s\) parallel
 servers differing in service-time distribution and cost rate, with Poisson
-arrivals and truncated-normal, server-specific service times. Cost accrues at
-per-server processing and idle rates and a per-job waiting rate; an episode is
-one shift of \(H = 480\) minutes. A routing decision
+arrivals and server-specific service times drawn from a normal distribution and
+clipped below at a floor. Cost accrues at per-server processing and idle rates
+and a per-job waiting rate; an episode is one shift of \(H = 480\) minutes. The
+event process runs in continuous time, but the simulator advances in one-minute
+steps and accrues cost and server busy time once per step from the state at the
+end of the step, so each minute counts as wholly busy or idle for each server
+and utilisation is busy minutes over 480. A routing decision
 is taken once per minute and assigns any job arriving in that minute its complete
 downstream route, a tuple \(a = (a_1, \ldots, a_N)\) from a space of size
 \(\prod_s m_s\); because the simulator advances to the first minute on reset, an
@@ -192,8 +190,11 @@ stages, with throughput floor \(T_{\min} = 18\) (bakery) or \(T_{\min} = 50\)
 (electronics) and utilisation floor \(U_{\min} = 0.50\), all three fixed in the
 protocol committed before the initial study; \(F_{\mathrm{fast}}\) and
 \(U_{\min}\) were read from a one-shot LeastUtilised run (Section 5.1). The
-over-provisioned station is excluded because LeastUtilised itself reaches only
-42% utilisation there, so a 0.50 floor would be infeasible for any policy.
+fast server of the over-provisioned third stage is not constrained: the
+LeastUtilised run from which the floors were read had it at 42% utilisation
+(ShortestQueue, 44%), so a 0.50 floor there would have bound on the reference
+rule itself, although a policy sending all third-stage work to that server
+would reach about 0.6 at ShortestQueue's throughput.
 
 ### 3.2 Reward and the conservative routing attractor
 
@@ -294,9 +295,12 @@ holds the cumulative rate below the floor for a long prefix of every episode
 whatever the policy does. Under ShortestQueue over the 50 test episodes it first
 reaches the floor at a median step of 185 (bakery, range 101 to 434, with one
 episode never reaching it) and 194 (electronics, 101 to 399), staying below on
-45% and 31% of post-warm-up steps. A
-policy achieving exactly \(\mathrm{TP} = 50\) on electronics meets the constraint but does not
-cross until \(t \approx 480\), never satisfying the training signal within the horizon. The
+45% and 31% of post-warm-up steps. Crossing is late when throughput is near
+the floor: the bakery episodes finishing at exactly \(\mathrm{TP} = 18\) first
+cross at steps 236 to 434 and then fall below the floor again for 3 to 156
+further steps, and the first-crossing step is strongly rank-correlated with
+final throughput (Spearman −0.74 on bakery, −0.77 on electronics), so a policy
+that just meets the constraint is penalised over most of the episode. The
 utilisation slack carried the same bias in milder form.
 
 The one-sided dual update of Eq. (5), applied once per episode with the
@@ -556,10 +560,13 @@ The penalty's sign is negative on most episodes, since the load-spreading
 policies over-satisfy both constraints in expectation: mean throughput 57.0
 against a floor of 50 on electronics and 20.2 against 18 on bakery, fast-server
 utilisation 0.79–0.91 against a floor of 0.50 for the corrected cell and
-ShortestQueue. The fraction of episodes on which it is negative is the joint
-satisfaction rate itself, 78–100% for the rules of Table 1 and 95% for the
-corrected cell. It therefore rewards surplus throughput and fast-server busy
-time rather than acting as a penalty, and cannot shrink: Eqs. (8) and (9) never
+ShortestQueue. Joint satisfaction implies a negative penalty but not
+conversely, since a surplus on one constraint can outweigh a shortfall on the
+other; measured on the test episodes at the multipliers each corrected seed
+reached, the penalty is negative on 88–100% of the rules' episodes and 98–100%
+of the corrected cell's, above the joint rates of 78–100% and 94–95%. It
+therefore rewards surplus throughput and fast-server busy time rather than
+acting as a penalty, and cannot shrink: Eqs. (8) and (9) never
 decrease a multiplier, whereas the equilibrium multiplier on a slack constraint
 is zero. A ratio of totals is a diagnostic rather than a measure of gradient
 influence, since a per-step constant is absorbed by the advantage baseline; the
@@ -710,8 +717,9 @@ carried by the randomisation, whether the time-sharing of a constrained optimum
 (Section 2.2) or the residue of entropy regularisation on a nearly flat
 objective; the two cannot be told apart here.
 
-A functioning dual on the stated CMDP therefore produces no policy competitive
-with ShortestQueue on either metric. Whether it approaches the total-cost optimum
+A functioning dual on the discounted, aggregate-utilisation surrogate of the
+stated CMDP (Sections 3.2 and 4.3) therefore produces no policy competitive with
+ShortestQueue on cost per unit or on joint satisfaction. Whether it approaches the total-cost optimum
 cannot be established here: its total cost is not below that of stateless
 routing, so the objective was pursued but not demonstrably solved.
 
@@ -728,14 +736,15 @@ monotone one-sided update integrates without bound; the multiplier saturates on
 every control seed, but the policy is measurably damaged only on the 12-route
 instance. The second, greedy evaluation of a near-uniform policy, reverses the
 reported verdict. The third, the scale of the multipliers, survives correction
-of the other two, explains the residual result and is the least visible: nothing
+of the other two, accounts for the direction of the residual result and is the
+least visible: nothing
 in the original pipeline would have surfaced it, whereas a single ratio of
 penalty to base return exposes it at once.
 
 ### 7.2 What the method learned, and what it was asked to learn
 
-The penalty did not overwhelm the agent's objective: for practical purposes it
-was that objective. With the multipliers two to four orders of magnitude above
+The penalty did not overwhelm the agent's objective: numerically, it was that
+objective. With the multipliers two to four orders of magnitude above
 the cost term, never released, and both constraints slack under any
 load-spreading policy, the augmented return rewarded surplus throughput and
 fast-server busy time, registering cost only in the third or fourth significant
@@ -765,7 +774,7 @@ joint event, not an expectation constraint whose satisfaction still leaves a
 quarter of episodes jointly infeasible. A functioning dual is not sufficient:
 here it changed what was learned without making it competitive, and on these
 testbeds the hinged cell, whose dual never released, remains the better policy on
-both metrics. Tuned dispatching rules remain the baseline to beat at this problem
+both cost per unit and joint satisfaction. Tuned dispatching rules remain the baseline to beat at this problem
 size and structure.
 
 ### 7.3 Deterministic deployment
@@ -842,22 +851,20 @@ simulation, with no physical validation.
 
 The failure reported by the author's initial study of constrained reinforcement
 learning on this problem traces to three breaks between the constraint stated
-and the metric reported. A per-step cumulative-rate surrogate for an
-episode-level constraint capped the multiplier within budget for every trained
-policy, and by the same arithmetic would do so for a dispatching rule that
-satisfies the constraint with a 14–23% margin. Greedy evaluation of near-uniform
-policies measured a router selected by unstable logit differences; correcting
-that alone reverses the verdict on the archived checkpoints without retraining.
-With both corrected, every seed satisfies the constraint criterion, yet on the
-12-route testbed the agent is not distinguishable from round-robin routing on
-cost per unit at this sample size and is 6.6% more expensive than ShortestQueue,
-with multipliers two to four orders of magnitude above the cost term and never
-released. A reward-scaled, symmetric dual behaves as a dual and the policy
-becomes state-dependent, but its training throughput falls towards the floor as
-a total-cost objective directs, the checkpoints retained are no better on the
-reported metric than the stateless rules, and their total cost is not below
-that of stateless routing either: the objective was pursued but not demonstrably
-solved.
+and the metric reported: a per-step cumulative-rate surrogate for an
+episode-level constraint, which capped the multiplier within budget for every
+trained policy and would do so for a dispatching rule that satisfies the
+constraint with a 14–23% margin; greedy evaluation of near-uniform policies,
+whose correction alone reverses the verdict on the archived checkpoints without
+retraining; and multipliers two to four orders of magnitude above the cost term
+that were never released. With the first two corrected, every seed satisfies
+the constraint criterion, yet on the 12-route testbed the agent is not
+distinguishable from round-robin routing on cost per unit at this sample size
+and is 6.6% more expensive than ShortestQueue. A reward-scaled, symmetric dual
+behaves as a dual, but its policy moves towards the throughput floor as a
+total-cost objective directs, is no better on the reported metric than the
+stateless rules and does not undercut them on total cost: the objective was
+pursued but not demonstrably solved.
 
 The objective posed, the constraint enforced, the surrogate trained against, the
 evaluation mode and the reported metric form a chain that must be coherent; here
@@ -888,9 +895,10 @@ The author reports there are no competing interests to declare.
 ## Declaration of generative AI use
 
 During the preparation of this work the corresponding author used a large
-language model assistant (Claude, Anthropic) to assist with simulation code,
-analysis scripting, drafting and editing. The author verified all results and
-takes full responsibility for the content of the article.
+language model assistant (Claude, Anthropic; models Claude Opus 5, Claude
+Fable 5 and Claude Fable 5.1, accessed through Claude Code) to assist with
+simulation code, analysis scripting, drafting and editing. The author verified
+all results and takes full responsibility for the content of the article.
 
 ## Data availability statement
 
@@ -898,7 +906,8 @@ The simulator, the Lagrangian wrappers, the three protocol documents, the
 deviation record, all runner and analysis scripts, and every per-seed summary,
 multiplier history and per-episode test record supporting the results reported
 here are openly available in the FlexFlowSim-CPPO repository at
-https://github.com/alrashdank/flexflowsim-cppo (branch `ablation-slack-fix`).
+https://github.com/alrashdank/flexflowsim-cppo, tag `ijms-submission` on branch
+`ablation-slack-fix`.
 The bakery service-time data are from the openly available dataset of Babor
 [25].
 
@@ -976,7 +985,10 @@ and the total-cost and base-reward bootstraps of Sections 6.7 and 6.1 are
 produced by `analysis_audit_r3.py`, which writes `r3_numbers.json`; Figures 1 and
 2 are drawn by `make_fig_lambda.py` and `make_fig_r2.py`. The protocol is `protocol.md`;
 its amendments are `protocol_amendment_r1.md` and `protocol_amendment_r2.md`;
-deviations are recorded in `protocol_deviations.md`.
+deviations are recorded in `protocol_deviations.md`. Every archived checkpoint
+records the software versions used: Python 3.11.15, Stable-Baselines3 2.9.0,
+PyTorch 2.13.0 (CPU), Gymnasium 1.3.0 and NumPy 2.4.4; the simulator runs on
+SimPy 4.1.2. `requirements-lock.txt` pins them.
 
 [Table A1 near here]
 
@@ -1014,7 +1026,14 @@ the full-budget comparison uses 1.6M timesteps on electronics and 1.5M on bakery
 over two cells; the symmetric cell uses 1.6M timesteps on electronics. Full-budget
 runs are executed in 400K-step segments carrying policy weights, optimiser state,
 dual variables and the dual episode counter across boundaries; only the in-flight
-rollout buffer is flushed, three times in 1.6M steps. Checkpoints are written
+rollout buffer is flushed, three times in 1.6M steps. At each boundary the
+environment is re-created and both the simulator's and the learner's random
+streams restart from the run seed, so the episode in flight is abandoned
+without a dual update and the first episodes of every segment share their
+arrival sequences with those of the first segment until the routing decisions
+diverge; the procedure is identical in every full-budget cell and both slack
+modes, so no comparison is affected, but the training episodes are less
+diverse than their count suggests. Checkpoints are written
 every 100K timesteps and additionally at each 400K segment boundary, giving 19
 per full-budget electronics run and 18 per bakery run; because PPO completes
 whole 2,048-step rollouts, checkpoint labels are nominal and actual step counts
@@ -1284,8 +1303,8 @@ training-mean multipliers. CIs are 95% t-intervals across seeds.
 **Table A1.** Testbed parameters from the configuration files. Inter-arrival
 times are exponential with mean 9.6 min (bakery) and 6.0 min (electronics);
 waiting cost is $0.10 (bakery) and $0.15 (electronics) per queued job per
-minute. Service times are normal with the stated mean and standard deviation in
-minutes, truncated below at the floor. Processing and idle costs are $ per
+minute. Service times are normal draws with the stated mean and standard
+deviation in minutes, clipped below at the floor. Processing and idle costs are $ per
 minute while busy and while idle. Queue lengths are normalised by 50 in the
 observation. Capacity is the stage's expected completions per 480-minute shift
 with every server busy. Constrained servers \(F_{\mathrm{fast}}\) are marked
