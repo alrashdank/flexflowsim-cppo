@@ -201,7 +201,8 @@ for l in LINES:
     if m:
         HEADINGS.add(m.group(1))
 for i, l in locate(r"Sections?\s+\d"):
-    for ref in re.findall(r"\b(\d+\.\d+|\d+)\b", re.search(r"Sections?\s+([\d., and]+)", l).group(1)):
+    m = re.search(r"Sections?\s+((?:\d+(?:\.\d+)?)(?:(?:,\s*|\s+and\s+)\d+(?:\.\d+)?(?!\s*%))*)", l)
+    for ref in re.findall(r"\d+(?:\.\d+)?", m.group(1)):
         if ref not in HEADINGS and not (ref.isdigit() and 1 <= int(ref) <= 9):
             fail("xref", f"L{i}: Section {ref} does not exist -> {l[:90]}")
 for i, l in locate(r"Appendix\s+[A-C]\b"):
