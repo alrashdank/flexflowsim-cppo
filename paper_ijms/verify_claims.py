@@ -259,6 +259,12 @@ BANNED = [
     (r"on the stated CMDP therefore", "the cell optimises a discounted, aggregate-utilisation surrogate"),
     (r"for practical purposes it\s+was that objective", "say 'numerically'"),
     (r"\b(?:both|either) metrics?\b", "name the two metrics"),
+    (r"in this literature almost always", "unsupported generalisation; say 'here'"),
+    (r"so no comparison is affected", "identical procedure does not establish no differential effect"),
+    (r"no longer drives the multiplier to its cap", "limit to the tested budget"),
+    (r"Four are state-aware", "CostMinimising and FastServerFirst are fixed-route rules"),
+    (r"lies? between (?:this testbed|the two)", "0.06-0.13 is not between 0.03 and 0.1"),
+    (r"on a capacity-limited line total cost is nearly flat", "keep the generalisation proportional: 'these lines'"),
 ]
 for pat, why in BANNED:
     for i, l in locate(pat):

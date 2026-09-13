@@ -27,8 +27,9 @@ correcting the slack signal raises it from 70% to 95% in new runs. The corrected
 agent is not distinguishable from round-robin routing on cost per unit and is
 6.6% more expensive than ShortestQueue. A reward-scaled dual behaves as a dual,
 but the policy moves towards the throughput floor as a total-cost objective
-directs and is no better than stateless routing: on a capacity-limited line
-total cost is nearly flat in routing while cost per unit falls with throughput.
+directs and is no better than stateless routing: on these capacity-limited
+lines total cost was nearly flat in routing while cost per unit fell with
+throughput.
 
 **Keywords:** discrete-event simulation, constrained reinforcement learning,
 flow-shop routing, dispatching rules, benchmarking, production control
@@ -51,8 +52,7 @@ the constraint written in the formulation, normally an expectation over an
 episode; the surrogate the training loop penalises, which must be expressed per
 step for a policy-gradient method; the scale of the multipliers weighting that
 surrogate against the objective; the mode in which the trained stochastic policy
-is evaluated; and the metric finally reported, in this literature almost always a
-ratio such as cost per unit. Each link is defensible in isolation. When two
+is evaluated; and the metric finally reported, here a ratio, cost per unit. Each link is defensible in isolation. When two
 disagree, aggregate performance figures do not reveal which is at fault, and the
 natural reading of a poor result is that the method does not work.
 
@@ -89,10 +89,11 @@ protocol amendment before its runs, gives the multipliers the scale of the rewar
 and a symmetric update; the dual then behaves as a dual and the policy becomes
 state-dependent, but its training throughput falls towards the floor as a
 total-cost objective directs, and the checkpoints the selection rule retains sit
-at the throughput of random routing (Section 6.7), which also measures the mechanism
-directly: on a capacity-limited line total cost is nearly flat in routing while
-cost per unit falls with throughput, so an agent minimising total cost has no
-reason to buy throughput above its floor.
+at the throughput of random routing (Section 6.7). Total cost and cost per unit
+are different objectives by construction; Section 6.7 measures how far they
+diverge here, and finds total cost nearly flat in routing while cost per unit
+falls with throughput, so an agent minimising total cost had no reason to buy
+throughput above its floor.
 
 The scope of these results should be stated plainly. The first two breaks are
 properties of the instrumentation, not of constrained RL. Correcting them does
@@ -354,8 +355,10 @@ $$\lambda_U \leftarrow \operatorname{clip}\!\left(\lambda_U + \eta_U \sum_{i\in 
 Dividing by H keeps the throughput slack in the per-step rate units of Eq. (4),
 so \(\eta_T\) and the initial value and cap of \(\lambda_T\) carry over unchanged.
 The ratchet advances only on violating episodes, so a policy that satisfies the
-constraint on most episodes no longer drives the multiplier to its cap; Section
-6.1 confirms this for the trained policies.
+constraint on most episodes drives the multiplier up at a rate set by its
+violation frequency rather than by the fill phase; within the training budget
+used here the corrected signal did not reach the cap on any seed (Section 6.1),
+though a persistent violation rate would still reach it eventually.
 
 Retaining the hinge keeps the update monotone: Eqs. (8) and (9) remove the
 guaranteed divergence of Eq. (4), not the monotonicity, and under a stochastic
@@ -387,11 +390,13 @@ near-uniform policy without saying so.
 
 Six dispatching rules are evaluated on the 50 test episodes (Table 1), all
 deciding once per minute from the same observation as the agent (Section 3.1);
-Appendix A.9 defines them as implemented. Four are state-aware: ShortestQueue,
-which routes first to idle servers and breaks ties by queue length,
-LeastUtilised, CostMinimising and FastServerFirst. Two are stateless and
-resemble the learned policies (Section 6.5): UniformRandom, and RoundRobin,
-which advances one route per decision rather than per job. ShortestQueue, the
+Appendix A.9 defines them as implemented. Two are state-aware: ShortestQueue,
+which routes first to idle servers and breaks ties by queue length, and
+LeastUtilised, which weights that load by mean service time. Two follow a fixed
+route whatever the state: CostMinimising and FastServerFirst. Two are stateless
+load-spreaders and resemble the learned policies (Section 6.5): UniformRandom,
+and RoundRobin, which advances one route per decision rather than per job.
+ShortestQueue, the
 primary comparator, is cheapest per unit on electronics with both constraints
 satisfied on every test episode; on bakery it is not separable from RoundRobin,
 whose mean is $1.11 lower with heavily overlapping intervals.
@@ -660,8 +665,8 @@ The throughput dual now behaves as a dual. \(\lambda_T\) falls to zero within a 
 episodes when the constraint is slack, rises when violated, spends most of
 training between 0 and 0.5 with excursions to 0.73 and 1.48 on two seeds
 (Figure 2a, Table 5), never nears its cap, and is positive on 60–72% of episodes;
-its per-seed training mean, 0.06–0.13, lies between this testbed's chord estimate
-of 0.03 and the 0.1 at which it was initialised. The constraint
+its per-seed training mean, 0.06–0.13, sits above this testbed's chord estimate
+of 0.03 and around the 0.1 at which it was initialised. The constraint
 terms stay on the scale of the cost term, 7–14% of the return at the
 training-mean multipliers, against 190 to 10,000 times it in the hinged cells.
 
@@ -696,10 +701,10 @@ paired bootstrap of Section 5.2 on total cost it sits $72 above RoundRobin
 $129 below LeastUtilised [−$229, −$30], nominally resolvable but outside any
 pre-specified family and at a p-value Section 8 treats as indicative only. The
 direct measurement promised in Section 3.4 shows why: across the seven
-load-spreading policies mean episode cost spans 4.6%, $4,342 to $4,542, because
-on a capacity-limited line (Section 3.1) the work completed is fixed by server
-busy time and routing changes only which server does it and how long jobs wait;
-throughput spans 15.5%, 53.2 to 61.4 units. An objective nearly flat in
+load-spreading policies mean episode cost spans 4.6%, $4,342 to $4,542, as
+expected on a capacity-limited line (Section 3.1), where the work completed is
+fixed by server busy time and routing changes only which server does it and how
+long jobs wait; throughput spans 15.5%, 53.2 to 61.4 units. An objective nearly flat in
 routing and indifferent to throughput above the floor teaches a policy gradient
 little, and what it teaches, that such throughput is not worth paying for, is the
 opposite of what cost per unit rewards.
@@ -868,10 +873,12 @@ pursued but not demonstrably solved.
 
 The objective posed, the constraint enforced, the surrogate trained against, the
 evaluation mode and the reported metric form a chain that must be coherent; here
-it was not. Across the seven load-spreading policies of the 12-route testbed,
-total cost spans 4.6% and throughput 15.5%, so on a capacity-limited line a
-total-cost CMDP is the wrong instrument for a cost-per-unit objective however
-well its dual behaves. Separating these claims required reporting the constraint
+it was not. Total cost and cost per unit are different objectives by
+construction; how much the difference matters is empirical, and here, across the
+seven load-spreading policies of the 12-route testbed, total cost spans 4.6%
+and throughput 15.5%, so on these capacity-limited lines a total-cost CMDP was
+the wrong instrument for a cost-per-unit objective however well its dual
+behaved. Separating these claims required reporting the constraint
 actually implemented, the penalty's scale against the objective, the evaluation
 mode used, and a random-routing control; all four belong in routine practice.
 
@@ -1031,9 +1038,9 @@ environment is re-created and both the simulator's and the learner's random
 streams restart from the run seed, so the episode in flight is abandoned
 without a dual update and the first episodes of every segment share their
 arrival sequences with those of the first segment until the routing decisions
-diverge; the procedure is identical in every full-budget cell and both slack
-modes, so no comparison is affected, but the training episodes are less
-diverse than their count suggests. Checkpoints are written
+diverge. The procedure is identical in every full-budget cell and both slack
+modes; its effect on relative performance was not tested, and the training
+episodes are less diverse than their count suggests. Checkpoints are written
 every 100K timesteps and additionally at each 400K segment boundary, giving 19
 per full-budget electronics run and 18 per bakery run; because PPO completes
 whole 2,048-step rollouts, checkpoint labels are nominal and actual step counts
@@ -1106,7 +1113,7 @@ dollar figure came from the other testbed and the normaliser from this one; the
 same chord on electronics, from CostMinimising to ShortestQueue, gives about $12
 per unit, or 0.03 reward units, so the initial \(\lambda_T\) was set two to
 three times above this testbed's own estimate, and the per-seed training means of
-0.06–0.13 in Table 5 lie between the two. And the second argument is not
+0.06–0.13 in Table 5 sit above the former and around the latter. And the second argument is not
 independent of the first, since the 2,400 is the measured penalty ratio of
 Section 6.4 divided by the chosen target; it is a scaling heuristic, not
 corroboration.
