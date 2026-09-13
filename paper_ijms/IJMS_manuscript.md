@@ -49,8 +49,8 @@ result that is an artefact of the pipeline rather than a property of the method.
 
 A constrained learning pipeline contains five objects that are easy to conflate:
 the constraint written in the formulation, normally an expectation over an
-episode; the surrogate the training loop penalises, which must be expressed per
-step for a policy-gradient method; the scale of the multipliers weighting that
+episode; the surrogate the training loop penalises, which this implementation
+expresses per step; the scale of the multipliers weighting that
 surrogate against the objective; the mode in which the trained stochastic policy
 is evaluated; and the metric finally reported, here a ratio, cost per unit. Each link is defensible in isolation. When two
 disagree, aggregate performance figures do not reveal which is at fault, and the
@@ -624,7 +624,7 @@ The penalty's sign is negative on most episodes, since the load-spreading
 policies over-satisfy both constraints in expectation: mean throughput 57.0
 against a floor of 50 on electronics and 20.2 against 18 on bakery, fast-server
 utilisation 0.79–0.91 against a floor of 0.50 for the corrected cell and
-ShortestQueue. Joint satisfaction implies a negative penalty but not
+ShortestQueue. Joint satisfaction implies a non-positive penalty but not
 conversely, since a surplus on one constraint can outweigh a shortfall on the
 other; measured on the test episodes at the multipliers each corrected seed
 reached, the penalty is negative on 88–100% of the rules' episodes and 98–100%

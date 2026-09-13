@@ -78,6 +78,11 @@ footer=sect.footer
 footer.is_linked_to_previous=False
 p=footer.paragraphs[0] if footer.paragraphs else footer.add_paragraph()
 p.text=''
+# Word never numbers footer lines, but LibreOffice does unless told not to,
+# which made the footer show a second number at the left margin.
+pPr=p._p.get_or_add_pPr()
+if pPr.find(qn('w:suppressLineNumbers')) is None:
+    pPr.insert(0, el('w:suppressLineNumbers'))
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 p.alignment=WD_ALIGN_PARAGRAPH.CENTER
 def field(par,instr):

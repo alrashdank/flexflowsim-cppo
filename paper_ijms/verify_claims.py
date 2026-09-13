@@ -265,6 +265,8 @@ BANNED = [
     (r"Four are state-aware", "CostMinimising and FastServerFirst are fixed-route rules"),
     (r"lies? between (?:this testbed|the two)", "0.06-0.13 is not between 0.03 and 0.1"),
     (r"on a capacity-limited line total cost is nearly flat", "keep the generalisation proportional: 'these lines'"),
+    (r"implies a negative penalty", "equality gives zero: 'non-positive'"),
+    (r"must be expressed per\s+step", "terminal rewards are possible: 'this implementation expresses per step'"),
 ]
 for pat, why in BANNED:
     for i, l in locate(pat):
