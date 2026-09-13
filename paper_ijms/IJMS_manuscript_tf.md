@@ -1213,9 +1213,10 @@ to differ from another.
 | \(C_{\mathrm{norm}}\), \(N_{\mathrm{norm}}\), \(W_{\mathrm{norm}}\) | Reward normalisation constants of Eq. (1) |
 | \(\pi\) | Policy |
 
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 ## Tables
-
-\newpage
 
 **Table 1.** Dispatching baselines, mean ± 95% confidence interval (CI) over 50
 test episodes. Joint sat. is the fraction of episodes satisfying both constraints.
@@ -1235,8 +1236,9 @@ test episodes. Joint sat. is the fraction of episodes satisfying both constraint
 | Electronics, RoundRobin | 55.10 ± 1.08 | $78.90 ± 1.54 | 92% | 88% | 86% |
 | Electronics, UniformRandom | 54.40 ± 1.22 | $79.91 ± 2.20 | 84% | 88% | 78% |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table 2.** Full-budget comparison. CI is the 95% two-sided t-interval across
 seeds; "sat." is joint constraint satisfaction over test episodes. References
 from Table 1: ShortestQueue $73.25 / 100% and RoundRobin $78.90 / 86% on
@@ -1249,8 +1251,9 @@ electronics; ShortestQueue $138.66 / 96% and RoundRobin $137.55 / 88% on bakery.
 | bakery | corrected | $141.07 ± 0.68 | 94.4% | 5/5 | 0/5 | $165.66 ± 46.86 | 54.4% |
 | bakery | original signal | $139.61 ± 2.04 | 86.4% | 5/5 | 5/5 | $180.37 ± 40.63 | 13.2% |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table 3.** Paired hierarchical bootstrap (10,000 resamples of seeds and
 episodes) of the learned cells, evaluated stochastically, against each
 comparator. Entries are the difference in means (learned cell minus comparator)
@@ -1276,8 +1279,9 @@ comparisons surviving the Holm adjustment within their family.
 | electronics, symmetric | corrected (hinged) | +3.81 [+0.92, +6.61] | 0.012 | −20.4 [−30.0, −11.2] | < 0.001* |
 | electronics, symmetric | original signal | −0.21 [−3.22, +2.80] | 0.89 | +4.8 [−9.6, +19.2] | 0.54 |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table 4.** Re-evaluation of the archived checkpoints. Q1 evaluates the
 originally selected checkpoint in both modes; Q2 applies stochastic selection.
 n = 4 for the PID variant because one seed's checkpoints were not archived.
@@ -1289,8 +1293,9 @@ n = 4 for the PID variant because one seed's checkpoints were not archived.
 | One-sided, bakery | 5 | $149.30 ± 27.73 | 69% | $140.56 ± 3.15 | 91% | $139.60 ± 2.49 | 80% | 5/5 (originally 4/5) |
 | PID, bakery | 4 | $141.57 ± 22.71 | 74% | $140.46 ± 1.60 | 84% | $139.94 ± 3.72 | 83% | 4/4 (originally 3/4) |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table 5.** Symmetric, reward-scaled cell, electronics, per seed. \(\lambda_T\) statistics
 are over the 3,352 training episodes; the penalty ratio is the magnitude of the
 episode penalty relative to the base return on the test episodes at the
@@ -1305,8 +1310,9 @@ training-mean multipliers. CIs are 95% t-intervals across seeds.
 | 999 | 1,103K | $84.05 | 52.6 | 68% | $109.88 | 39.6 | 2% | 0.07 / 0.55 | 0.07 |
 | mean ± CI | | $81.91 ± 3.47 | 54.1 ± 2.4 | 74.8% | $110.45 ± 19.40 | 41.8 ± 6.3 | 10.0% | | |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table A1.** Testbed parameters from the configuration files. Inter-arrival
 times are exponential with mean 9.6 min (bakery) and 6.0 min (electronics);
 waiting cost is $0.10 (bakery) and $0.15 (electronics) per queued job per
@@ -1331,8 +1337,9 @@ with every server busy. Constrained servers \(F_{\mathrm{fast}}\) are marked
 | Electronics | 3 | fast | 5.0 | 1.5 | 0.5 | 1.8 | 0.2 | 144.0 |
 | Electronics | 3 | slow | 10.0 | 3.0 | 1.0 | 0.6 | 0.1 | |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table B1.** Mechanism ablation, electronics, 400K steps, 5 seeds per cell,
 greedy selection. Reference: ShortestQueue $73.25 per unit at throughput 61.4.
 Note: with the slack signal held fixed, replacing the shaped reward with the
@@ -1348,8 +1355,9 @@ satisfaction by +11.6 [−7.6, +32.0] and −0.8 [−8.0, +6.0] percentage point
 | cost + cumulative-rate | $155.18 ± 88.17 | 0.0% | $80.44 ± 1.01 | 75.2% | 5/5 |
 | cost + episode (the Lagrangian of Section 4.3) | $155.35 ± 80.54 | 0.0% | $78.73 ± 1.57 | 93.6% | 0/5 |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table B2.** Action-distribution statistics of the selected checkpoints, ranges
 or means across five seeds. Uniform reference: normalised entropy 1.00; effective
 routes 12 (electronics) or 4 (bakery); top-1 probability 0.083 or 0.25; cross-seed
@@ -1364,8 +1372,9 @@ states; the gap is a mean with the per-seed range in parentheses.
 | bakery | original signal | 0.95–0.99 | 3.7–3.9 of 4 | 0.29–0.40 | 0.113 (0.027–0.214) | 33.4% | 15.3% |
 | electronics | symmetric, reward-scaled | 0.63–0.83 | 4.8–7.8 of 12 | 0.28–0.48 | 0.179 (0.070–0.287) | 9.7% | 10.2% |
 
-\newpage
-
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Table B3.** Joint constraint satisfaction on the 50 test episodes at alternative
 thresholds, without retraining. SQ ShortestQueue, LU LeastUtilised, RR
 RoundRobin, Random UniformRandom; "corrected", "original" and "symmetric" are the
@@ -1389,10 +1398,18 @@ threshold.
 | bakery | 20 | 0.70 | 62% | 46% | 22% | 34% | 57% | 40% | – |
 | bakery | 21 | 0.50 | 44% | 32% | 46% | 32% | 40% | 41% | – |
 
-\newpage
-
-## Figure captions
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+## Figures
 
 **Figure 1.** Throughput multiplier \(\lambda_T\) over training, five seeds per cell, logarithmic scale: (a) bakery, (b) electronics. Upper traces: the original signal, the cumulative-rate slack of Eq. (4). Lower traces: the corrected cell, the episode-level slack of Eqs. (8) and (9). The dashed line is the cap of 20,000. (file: Figure1.tif)
 
+![](fig_lambda_T.png){width=16cm}\
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
 **Figure 2.** The symmetric, reward-scaled cell during training, five seeds. (a) \(\lambda_T\) per episode on a linear scale; the dashed line is the shadow-price estimate of 0.1 from which the initial value was set. (b) Throughput slack \(\mathrm{TP} - T_{\min}\) per training episode, 50-episode moving average; the dashed line is the mean slack of uniform-random routing on the test episodes. (file: Figure2.tif)
+
+![](fig_symmetric.png){width=16cm}\

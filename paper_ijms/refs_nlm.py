@@ -72,12 +72,20 @@ for m in list(fpat.finditer(body)):
     figs.append((m.group(2), m.group(1), " ".join(m.group(3).split())))
     body = body.replace(m.group(0), f"[Figure {m.group(2)} near here]\n")
 
-out = [f'---\ntitle: "{title}"\n---\n', body.rstrip(), "\n## Tables\n"]
-for num, blk in tables:
-    out.append("\\newpage\n\n" + blk + "\n")
-out.append("\\newpage\n\n## Figure captions\n")
+out = [f'---\ntitle: "{title}"\n---\n', body.rstrip(), "\n\\newpage\n\n## Tables\n"]
+for i, (num, blk) in enumerate(tables):
+    out.append(("\\newpage\n\n" if i else "") + blk + "\n")
+out.append("\\newpage\n\n## Figures\n")
 for num, fname, cap in figs:
-    out.append(f"**Figure {num}.** {cap} (file: Figure{num}.tif)\n")
-pathlib.Path("IJMS_manuscript_tf.md").write_text("\n".join(out))
+    # caption first, as the journal's running order asks, then the image itself
+    # so that a reader of the Word file sees it; the 600-dpi TIFF named in the
+    # caption is the production file and is supplied separately.
+    out.append(("\\newpage\n\n" if num != figs[0][0] else "")
+               + f"**Figure {num}.** {cap} (file: Figure{num}.tif)\n\n"
+               f"![]({fname}.png){{width=16cm}}\\\n")
+# pandoc drops raw LaTeX when writing docx, so page breaks go in as raw OpenXML
+PAGEBREAK = "```{=openxml}\n<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>\n```\n"
+pathlib.Path("IJMS_manuscript_tf.md").write_text(
+    "\n".join(out).replace("\\newpage\n\n", PAGEBREAK))
 print(f"references: {len(order)} numbered; tables moved: {len(tables)}; figures moved: {len(figs)}")
 print("citation order:", ", ".join(f"{i}={k}" for i, k in enumerate(order, 1)))
