@@ -37,6 +37,35 @@ src = pathlib.Path("IJMS_manuscript.md").read_text()
 body = re.sub(r"^---\ntitle:.*?\n---\n", "", src, flags=re.S)
 title = re.search(r'title: "(.*?)"', src).group(1)
 
+# ---- anonymous copy for the submission portal ("Manuscript - anonymous") ----
+# Removes the author block and everything that points at the author directly:
+# the repository address (the GitHub account name identifies the author), the
+# software reference, and the two sentences that say whose the initial study
+# was.  The published self-citation stays in the third person, as the
+# publisher's anonymous-review guidance allows.
+ANON = "--anon" in sys.argv
+SUFFIX = "_anon" if ANON else ""
+if ANON:
+    def sub1(old, new):
+        global body
+        assert body.count(old) == 1, old[:60]
+        body = body.replace(old, new)
+    body = re.sub(r"\A.*?(?=## Abstract)", "", body, flags=re.S)   # author block
+    sub1("""the author's own earlier study, run under a protocol committed in advance, which""",
+         """an earlier, unpublished study by the same author (details withheld for
+anonymous review), run under a protocol committed in advance, which""")
+    sub1("""The failure reported by the author's initial study of constrained reinforcement""",
+         """The failure reported by the initial study of constrained reinforcement""")
+    sub1("""here are openly available in the FlexFlowSim-CPPO repository at
+https://github.com/alrashdank/flexflowsim-cppo, tag `ijms-submission` on branch
+`ablation-slack-fix`.""",
+         """here are openly available in a public repository at a tagged release; the
+address is withheld for anonymous review and given in the version of this
+manuscript that carries the author details.""")
+    NLM["flexflowsimcppo"] = ("[Author, anonymised for review]. FlexFlowSim-CPPO: simulator, "
+                              "protocol documents and archived results [software]. 2026. "
+                              "Repository address withheld for anonymous review.")
+
 order, seen = [], {}
 def repl(m):
     keys = [k.strip().lstrip("@") for k in m.group(1).split(";")]
@@ -53,7 +82,7 @@ assert "@" not in re.sub(r"\S+@\S+\.\S+", "", body), "unconverted citation remai
 reflist = "\n\n".join(f"{i}. {NLM[k]}" for i, k in enumerate(order, 1))
 body = body.replace("## References\n", "## References\n\n" + reflist + "\n")
 
-pathlib.Path("IJMS_manuscript_read.md").write_text(f'---\ntitle: "{title}"\n---\n' + body)
+pathlib.Path(f"IJMS_manuscript_read{SUFFIX}.md").write_text(f'---\ntitle: "{title}"\n---\n' + body)
 
 # ---- split into the running order the journal specifies -------------------
 def cut(pat, text):
@@ -97,7 +126,7 @@ for num, fname, cap in figs:
     out.append(f"**Figure {num}.** {cap} (file: Figure{num}.tif)\n")
 # pandoc drops raw LaTeX when writing docx, so page breaks go in as raw OpenXML
 PAGEBREAK = "```{=openxml}\n<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>\n```\n"
-pathlib.Path("IJMS_manuscript_tf.md").write_text(
+pathlib.Path(f"IJMS_manuscript_tf{SUFFIX}.md").write_text(
     "\n".join(out).replace("\\newpage\n\n", PAGEBREAK))
 print(f"references: {len(order)} numbered; tables moved: {len(tables)}; figures moved: {len(figs)}")
 print("citation order:", ", ".join(f"{i}={k}" for i, k in enumerate(order, 1)))

@@ -312,6 +312,19 @@ if docx_path.exists():
 else:
     warn("docx", f"{docx_path.name} not built; docx checks skipped")
 
+anon_path = DRAFT / "IJMS_manuscript_anonymous.docx"
+if anon_path.exists():
+    try:
+        from docx import Document
+        atxt = "\n".join(p.text for p in Document(str(anon_path)).paragraphs).lower()
+        for ident in ("khaled", "alrashdank", "paaet", "kuwait", "orcid", "github.com", "kr.alrashdan"):
+            if ident in atxt:
+                fail("anon", f"identifier {ident!r} present in the anonymous manuscript")
+        if "the author's own" in atxt:
+            fail("anon", "'the author's own' present in the anonymous manuscript")
+    except ImportError:
+        pass
+
 pdf_path = DRAFT / "IJMS_manuscript.pdf"
 if pdf_path.exists():
     import subprocess
