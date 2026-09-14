@@ -761,7 +761,7 @@ would. A reward-scaled dual free to fall does make PPO leave the uniform policy
 and learn a state-dependent router whose training throughput falls towards the
 floor as a total-cost objective directs; but the checkpoints the selection rule
 retains sit at random routing's throughput, and the cell's total cost is not
-below that of the stateless rules (Section 6.7). "Failed to learn" therefore
+below that of the stateless rules (Section 6.7). 'Failed to learn' therefore
 needs qualification twice over: the hinged cells were never seriously asked to
 minimise cost, and the symmetric cell was asked to minimise a quantity that is
 not the reported metric and moved in that direction without demonstrably
@@ -895,7 +895,7 @@ work.
 This research received no specific grant from funding agencies in the public,
 commercial, or not-for-profit sectors.
 
-## Disclosure statement
+## Disclosure of interest
 
 The author reports there are no competing interests to declare.
 
@@ -1240,7 +1240,7 @@ test episodes. Joint sat. is the fraction of episodes satisfying both constraint
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 **Table 2.** Full-budget comparison. CI is the 95% two-sided t-interval across
-seeds; "sat." is joint constraint satisfaction over test episodes. References
+seeds; 'sat.' is joint constraint satisfaction over test episodes. References
 from Table 1: ShortestQueue $73.25 / 100% and RoundRobin $78.90 / 86% on
 electronics; ShortestQueue $138.66 / 96% and RoundRobin $137.55 / 88% on bakery.
 
@@ -1377,7 +1377,7 @@ states; the gap is a mean with the per-seed range in parentheses.
 ```
 **Table B3.** Joint constraint satisfaction on the 50 test episodes at alternative
 thresholds, without retraining. SQ ShortestQueue, LU LeastUtilised, RR
-RoundRobin, Random UniformRandom; "corrected", "original" and "symmetric" are the
+RoundRobin, Random UniformRandom; 'corrected', 'original' and 'symmetric' are the
 learned cells evaluated stochastically and pooled over five seeds (the symmetric
 cell was run on electronics only). The first row of each testbed is the protocol
 threshold.
@@ -1403,13 +1403,22 @@ threshold.
 ```
 ## Figures
 
-**Figure 1.** Throughput multiplier \(\lambda_T\) over training, five seeds per cell, logarithmic scale: (a) bakery, (b) electronics. Upper traces: the original signal, the cumulative-rate slack of Eq. (4). Lower traces: the corrected cell, the episode-level slack of Eqs. (8) and (9). The dashed line is the cap of 20,000. (file: Figure1.tif)
+**Figure 1**
 
-![](fig_lambda_T.png){width=16cm}\
+![Two-panel line chart of the throughput multiplier over training on a logarithmic axis, bakery left and electronics right; the original signal's five traces rise to the cap of 20,000, the corrected signal's five stay one to two orders of magnitude lower.](fig_lambda_T.png){width=16cm}\
 
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
-**Figure 2.** The symmetric, reward-scaled cell during training, five seeds. (a) \(\lambda_T\) per episode on a linear scale; the dashed line is the shadow-price estimate of 0.1 from which the initial value was set. (b) Throughput slack \(\mathrm{TP} - T_{\min}\) per training episode, 50-episode moving average; the dashed line is the mean slack of uniform-random routing on the test episodes. (file: Figure2.tif)
+**Figure 2**
 
-![](fig_symmetric.png){width=16cm}\
+![Two-panel chart of the symmetric cell over training: left, the throughput multiplier oscillating between 0 and about 1.5 around a dashed line at 0.1; right, the throughput slack per episode falling from about 4 towards 1 to 2 units above the floor.](fig_symmetric.png){width=16cm}\
+
+```{=openxml}
+<w:p><w:r><w:br w:type="page"/></w:r></w:p>
+```
+## Figure captions
+
+**Figure 1.** Throughput multiplier \(\lambda_T\) over training, five seeds per cell, logarithmic scale: (a) bakery, (b) electronics. Upper traces: the original signal, the cumulative-rate slack of Eq. (4). Lower traces: the corrected cell, the episode-level slack of Eqs. (8) and (9). The dashed line is the cap of 20,000. (file: Figure1.tif)
+
+**Figure 2.** The symmetric, reward-scaled cell during training, five seeds. (a) \(\lambda_T\) per episode on a linear scale; the dashed line is the shadow-price estimate of 0.1 from which the initial value was set. (b) Throughput slack \(\mathrm{TP} - T_{\min}\) per training episode, 50-episode moving average; the dashed line is the mean slack of uniform-random routing on the test episodes. (file: Figure2.tif)

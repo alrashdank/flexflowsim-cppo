@@ -75,14 +75,26 @@ for m in list(fpat.finditer(body)):
 out = [f'---\ntitle: "{title}"\n---\n', body.rstrip(), "\n\\newpage\n\n## Tables\n"]
 for i, (num, blk) in enumerate(tables):
     out.append(("\\newpage\n\n" if i else "") + blk + "\n")
+# Journal running order: figures (one per page), then the captions as a list.
+# The image description (alt text) goes into the docx for accessibility; the
+# 600-dpi TIFF named in the caption list is the production file, supplied
+# separately.
+ALT = {"1": "Two-panel line chart of the throughput multiplier over training on "
+            "a logarithmic axis, bakery left and electronics right; the original "
+            "signal's five traces rise to the cap of 20,000, the corrected "
+            "signal's five stay one to two orders of magnitude lower.",
+       "2": "Two-panel chart of the symmetric cell over training: left, the "
+            "throughput multiplier oscillating between 0 and about 1.5 around "
+            "a dashed line at 0.1; right, the throughput slack per episode "
+            "falling from about 4 towards 1 to 2 units above the floor."}
 out.append("\\newpage\n\n## Figures\n")
 for num, fname, cap in figs:
-    # caption first, as the journal's running order asks, then the image itself
-    # so that a reader of the Word file sees it; the 600-dpi TIFF named in the
-    # caption is the production file and is supplied separately.
     out.append(("\\newpage\n\n" if num != figs[0][0] else "")
-               + f"**Figure {num}.** {cap} (file: Figure{num}.tif)\n\n"
-               f"![]({fname}.png){{width=16cm}}\\\n")
+               + f"**Figure {num}**\n\n"
+               f"![{ALT.get(num, '')}]({fname}.png){{width=16cm}}\\\n")
+out.append("\\newpage\n\n## Figure captions\n")
+for num, fname, cap in figs:
+    out.append(f"**Figure {num}.** {cap} (file: Figure{num}.tif)\n")
 # pandoc drops raw LaTeX when writing docx, so page breaks go in as raw OpenXML
 PAGEBREAK = "```{=openxml}\n<w:p><w:r><w:br w:type=\"page\"/></w:r></w:p>\n```\n"
 pathlib.Path("IJMS_manuscript_tf.md").write_text(

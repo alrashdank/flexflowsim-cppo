@@ -21,9 +21,10 @@ the .docx, 12,692), of which approximately 7,900 are main text (Sections 1–9);
 the remainder is the abstract, the tables, the references and Appendices A–C.
 The main text contains 5 tables and 2 figures; Appendix A contains a parameter
 table, Appendix B 3 supplementary tables and Appendix C a nomenclature table.
-Tables and figures follow the text, one per page, each figure below its caption;
-the figures are also supplied separately as 600-dpi TIFF files (Figure1.tif,
-Figure2.tif). The manuscript carries page numbers and continuous line numbers.
+Tables and figures follow the text, one per page, with the figure captions
+listed after the figures; the figures are also supplied separately as 600-dpi
+TIFF files (Figure1.tif, Figure2.tif). The manuscript carries page numbers and
+continuous line numbers.
 
 ---
 

@@ -27,8 +27,10 @@ plt.rcParams.update({
 
 H = 480                     # minutes per episode, the paper's step convention
 CAP = 20000.0
-CELLS = [("shaped-cumrate", "#d9603b", "original signal (cumulative-rate slack)"),
-         ("cost-episode",   "#3b7fd9", "corrected (episode-level slack)")]
+# Light orange against dark blue: the two groups differ in luminance as well as
+# hue, so they remain distinguishable in a greyscale print.
+CELLS = [("shaped-cumrate", "#e8935a", "original signal (cumulative-rate slack)"),
+         ("cost-episode",   "#1f4e99", "corrected (episode-level slack)")]
 TESTBEDS = [("bakery", "(a) bakery, 1.5M steps"), ("electronics", "(b) electronics, 1.6M steps")]
 
 fig, axes = plt.subplots(1, 2, figsize=(6.7, 2.7), dpi=200, sharey=True)

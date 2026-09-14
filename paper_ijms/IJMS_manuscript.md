@@ -502,7 +502,7 @@ and evaluated in both modes on the 50 test episodes: the original implementation
 (cost-only reward, episode-level slack).
 
 **Table 2.** Full-budget comparison. CI is the 95% two-sided t-interval across
-seeds; "sat." is joint constraint satisfaction over test episodes. References
+seeds; 'sat.' is joint constraint satisfaction over test episodes. References
 from Table 1: ShortestQueue $73.25 / 100% and RoundRobin $78.90 / 86% on
 electronics; ShortestQueue $138.66 / 96% and RoundRobin $137.55 / 88% on bakery.
 
@@ -836,7 +836,7 @@ would. A reward-scaled dual free to fall does make PPO leave the uniform policy
 and learn a state-dependent router whose training throughput falls towards the
 floor as a total-cost objective directs; but the checkpoints the selection rule
 retains sit at random routing's throughput, and the cell's total cost is not
-below that of the stateless rules (Section 6.7). "Failed to learn" therefore
+below that of the stateless rules (Section 6.7). 'Failed to learn' therefore
 needs qualification twice over: the hinged cells were never seriously asked to
 minimise cost, and the symmetric cell was asked to minimise a quantity that is
 not the reported metric and moved in that direction without demonstrably
@@ -970,7 +970,7 @@ work.
 This research received no specific grant from funding agencies in the public,
 commercial, or not-for-profit sectors.
 
-## Disclosure statement
+## Disclosure of interest
 
 The author reports there are no competing interests to declare.
 
@@ -1246,7 +1246,7 @@ states; the gap is a mean with the per-seed range in parentheses.
 
 **Table B3.** Joint constraint satisfaction on the 50 test episodes at alternative
 thresholds, without retraining. SQ ShortestQueue, LU LeastUtilised, RR
-RoundRobin, Random UniformRandom; "corrected", "original" and "symmetric" are the
+RoundRobin, Random UniformRandom; 'corrected', 'original' and 'symmetric' are the
 learned cells evaluated stochastically and pooled over five seeds (the symmetric
 cell was run on electronics only). The first row of each testbed is the protocol
 threshold.
