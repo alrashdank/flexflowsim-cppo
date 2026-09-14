@@ -979,8 +979,10 @@ The author reports there are no competing interests to declare.
 During the preparation of this work the corresponding author used a large
 language model assistant (Claude, Anthropic; models Claude Opus 5, Claude
 Fable 5 and Claude Fable 5.1, accessed through Claude Code) to assist with
-simulation code, analysis scripting, drafting and editing. The author verified
-all results and takes full responsibility for the content of the article.
+simulation code, analysis scripting, drafting and editing, in order to speed up
+implementation and to improve the clarity and consistency of the text. The
+author verified all results and takes full responsibility for the content of the
+article.
 
 ## Data availability statement
 

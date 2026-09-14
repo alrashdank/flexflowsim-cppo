@@ -52,8 +52,9 @@ to declare.
 corresponding author used a large language model assistant (Claude, Anthropic;
 models Claude Opus 5, Claude Fable 5 and Claude Fable 5.1, accessed through
 Claude Code) to assist with simulation code, analysis scripting, drafting and
-editing. The author verified all results and takes full responsibility for the
-content of the article.
+editing, in order to speed up implementation and to improve the clarity and
+consistency of the text. The author verified all results and takes full
+responsibility for the content of the article.
 
 **Data availability.** The simulator, the Lagrangian wrappers, the three protocol
 documents, the deviation record, all runner and analysis scripts, and every
