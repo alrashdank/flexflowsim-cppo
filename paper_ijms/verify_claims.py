@@ -234,6 +234,12 @@ for c in sorted(CAPTIONS):
     if c not in CITED:
         fail("xref", f"{c} has a caption but is never cited in the text")
 
+for m in re.finditer(r"^\*\*Figure (\d+)\.\*\*(.*?)(?=\n\n)", TEXT, re.M | re.S):
+    num, cap = m.group(1), m.group(2)
+    for panel in re.findall(r"\(([a-z])\)", cap):
+        if not re.search(rf"Figure {num}\(?{panel}\)?\b", TEXT.replace(m.group(0), "")):
+            fail("xref", f"Figure {num}{panel} is a panel in the caption but never cited in the text")
+
 EQ_TAGS = {m.group(1) for m in re.finditer(r"\\qquad\((\d+)\)\$\$", TEXT)}
 for i, l in locate(r"Eqs?\.\s*\("):
     for n in re.findall(r"\((\d+)\)", l):
@@ -317,7 +323,7 @@ if anon_path.exists():
     try:
         from docx import Document
         atxt = "\n".join(p.text for p in Document(str(anon_path)).paragraphs).lower()
-        for ident in ("khaled", "alrashdank", "paaet", "kuwait", "orcid", "github.com", "kr.alrashdan"):
+        for ident in ("khaled", "alrashdan", "paaet", "kuwait", "orcid", "github.com", "kr.alrashdan", "same author", "flexflowsim", "routing under machine breakdowns"):
             if ident in atxt:
                 fail("anon", f"identifier {ident!r} present in the anonymous manuscript")
         if "the author's own" in atxt:

@@ -481,8 +481,8 @@ attribution holds at the 400K-step budget on which it was tested.
 
 The pattern holds at full budget on both testbeds (Figure 1). Under the
 cumulative-rate signal the multiplier ramps monotonically to its cap on every
-seed, at 0.19–0.24M steps on electronics and 0.59–0.65M on bakery, then is flat,
-as Section 4.2 predicts. Under the episode-level signal it advances only on
+seed, at 0.59–0.65M steps on bakery (Figure 1a) and 0.19–0.24M on electronics
+(Figure 1b), then is flat, as Section 4.2 predicts. Under the episode-level signal it advances only on
 violating episodes, ending between 2,525 and 7,858, never within a factor of 2.5
 of the cap: it does not saturate, but neither has it converged — the monotonicity
 of Section 4.3.

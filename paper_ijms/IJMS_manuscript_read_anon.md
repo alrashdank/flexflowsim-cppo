@@ -50,8 +50,8 @@ natural reading of a poor result is that the method does not work.
 This study measures three such breaks using Lagrangian proximal policy
 optimisation (PPO) [4] on two multi-server flow-shop testbeds,
 where the answer can be checked against tuned dispatching rules. The vehicle is
-an earlier, unpublished study by the same author (details withheld for
-anonymous review), run under a protocol committed in advance, which
+an earlier, unpublished study (details withheld for anonymous review), run
+under a protocol committed in advance, which
 reported that no seed satisfied throughput and utilisation constraints on a
 12-route electronics testbed and that the throughput multiplier saturated in
 every run. That study is referred to below as the initial study; its protocol,
@@ -108,7 +108,7 @@ masking [10,11,12], which presupposes
 infeasible actions and so does not apply to the fully feasible routing problem
 studied here; a parallel line evolves interpretable dispatching rules directly
 [13,14] or learns to select among existing
-rules [15]. On the two testbeds used here, Alrashdan
+rules [15]. On the two testbeds used here, an earlier study
 [16] benchmarked dispatching rules, Thompson-sampling
 bandits and unconstrained PPO under machine breakdowns, finding ShortestQueue
 ahead of PPO on cost per unit by 38–153% depending on disruption level; that
@@ -472,8 +472,8 @@ attribution holds at the 400K-step budget on which it was tested.
 
 The pattern holds at full budget on both testbeds (Figure 1). Under the
 cumulative-rate signal the multiplier ramps monotonically to its cap on every
-seed, at 0.19–0.24M steps on electronics and 0.59–0.65M on bakery, then is flat,
-as Section 4.2 predicts. Under the episode-level signal it advances only on
+seed, at 0.59–0.65M steps on bakery (Figure 1a) and 0.19–0.24M on electronics
+(Figure 1b), then is flat, as Section 4.2 predicts. Under the episode-level signal it advances only on
 violating episodes, ending between 2,525 and 7,858, never within a factor of 2.5
 of the cap: it does not saturate, but neither has it converged — the monotonicity
 of Section 4.3.
@@ -950,11 +950,7 @@ mode used, and a random-routing control; all four belong in routine practice.
 
 ## Author contributions
 
-The author conceived and designed the work, implemented the simulator, wrappers
-and analysis, conducted the experiments, analysed and interpreted the data,
-drafted the paper and revised it critically for intellectual content, approved
-the version to be published, and agrees to be accountable for all aspects of the
-work.
+Withheld for anonymous review.
 
 ## Funding
 
@@ -987,61 +983,61 @@ The bakery service-time data are from the openly available dataset of Babor
 
 ## References
 
-1. Mayerhoff J, Schmidt M. Reinforcement learning for autonomous production planning and control: a systematic literature review. J Manuf Syst. 2026;86:546–568. doi:10.1016/j.jmsy.2026.03.023.
+1. Mayerhoff J, Schmidt M. Reinforcement learning for autonomous production planning and control: a systematic literature review. J Manuf Syst. 2026;86:546–568. doi: 10.1016/j.jmsy.2026.03.023
 
-2. Schneider J, Pfannschmidt C, Nyhuis P, Schmidt M. The role of reinforcement learning in production control: a systematic literature review. IEEE Access. 2026;14:34375–34389. doi:10.1109/ACCESS.2026.3668903.
+2. Schneider J, Pfannschmidt C, Nyhuis P, et al. The role of reinforcement learning in production control: a systematic literature review. IEEE Access. 2026;14:34375–34389. doi: 10.1109/ACCESS.2026.3668903
 
-3. Doherty M, Matzner R, Sadeghi R, Bayvel P, Beghelli A. Reinforcement learning for dynamic resource allocation in optical networks: hype or hope? J Opt Commun Netw. 2025;17(9):D1–D17. doi:10.1364/JOCN.559990.
+3. Doherty M, Matzner R, Sadeghi R, et al. Reinforcement learning for dynamic resource allocation in optical networks: hype or hope? J Opt Commun Netw. 2025;17(9):D1–D17. doi: 10.1364/JOCN.559990
 
-4. Schulman J, Wolski F, Dhariwal P, Radford A, Klimov O. Proximal policy optimization algorithms. arXiv:1707.06347; 2017. doi:10.48550/arXiv.1707.06347.
+4. Schulman J, Wolski F, Dhariwal P, et al. Proximal policy optimization algorithms [preprint]. arXiv; 2017. arXiv:1707.06347. doi: 10.48550/arXiv.1707.06347
 
-5. [Author, anonymised for review]. FlexFlowSim-CPPO: simulator, protocol documents and archived results [software]. 2026. Repository address withheld for anonymous review.
+5. [Author, anonymised for review]. Simulator, protocol documents and archived results of the study [Internet]; 2026. Name and repository address withheld for anonymous review.
 
-6. Li C, Zhao X, Lin L, Zhang W, Gen M, Zhang Q. An evolutionary knowledge training-based proximal policy optimization algorithm for job shop scheduling in flexible intelligent manufacturing. Comput Ind Eng. 2025;210:111533. doi:10.1016/j.cie.2025.111533.
+6. Li C, Zhao X, Lin L, et al. An evolutionary knowledge training-based proximal policy optimization algorithm for job shop scheduling in flexible intelligent manufacturing. Comput Ind Eng. 2025;210:111533. doi: 10.1016/j.cie.2025.111533
 
-7. Liu Y, Fan J, Shen W. A deep reinforcement learning approach with graph attention network and multi-signal differential reward for dynamic hybrid flow shop scheduling problem. J Manuf Syst. 2025;80:643–661. doi:10.1016/j.jmsy.2025.03.028.
+7. Liu Y, Fan J, Shen W. A deep reinforcement learning approach with graph attention network and multi-signal differential reward for dynamic hybrid flow shop scheduling problem. J Manuf Syst. 2025;80:643–661. doi: 10.1016/j.jmsy.2025.03.028
 
-8. Shen Y, Zhang X, Jin T. Transformer-based multi-agent reinforcement learning for flexible job shop scheduling with AGVs. Appl Soft Comput. 2026;193:114899. doi:10.1016/j.asoc.2026.114899.
+8. Shen Y, Zhang X, Jin T. Transformer-based multi-agent reinforcement learning for flexible job shop scheduling with AGVs. Appl Soft Comput. 2026;193:114899. doi: 10.1016/j.asoc.2026.114899
 
-9. Wang R, Jing Y, Gu C, He S, Chen J. End-to-end multitarget flexible job shop scheduling with deep reinforcement learning. IEEE Internet Things J. 2025;12(4):4420–4434. doi:10.1109/JIOT.2024.3485748.
+9. Wang R, Jing Y, Gu C, et al. End-to-end multitarget flexible job shop scheduling with deep reinforcement learning. IEEE Internet Things J. 2025;12(4):4420–4434. doi: 10.1109/JIOT.2024.3485748
 
-10. Ali AM, Tirel L. Action masked deep reinforcement learning for controlling industrial assembly lines. In: 2023 IEEE World AI IoT Congress (AIIoT); 2023. p. 797–803. doi:10.1109/AIIoT58121.2023.10174426.
+10. Ali AM, Tirel L. Action masked deep reinforcement learning for controlling industrial assembly lines. In: 2023 IEEE World AI IoT Congress (AIIoT); 2023. p. 797–803. doi: 10.1109/AIIoT58121.2023.10174426
 
-11. Tang CY, Liu CH, Chen WK, You SD. Implementing action mask in proximal policy optimization (PPO) algorithm. ICT Express. 2020;6(3):200–203. doi:10.1016/j.icte.2020.05.003.
+11. Tang CY, Liu CH, Chen WK, et al. Implementing action mask in proximal policy optimization (PPO) algorithm. ICT Express. 2020;6(3):200–203. doi: 10.1016/j.icte.2020.05.003
 
-12. Zhang N, Liu B, Zhang J. Dual resource scheduling method of production equipment and rail-guided vehicles based on proximal policy optimization algorithm. Technologies. 2025;13(12):573. doi:10.3390/technologies13120573.
+12. Zhang N, Liu B, Zhang J. Dual resource scheduling method of production equipment and rail-guided vehicles based on proximal policy optimization algorithm. Technologies. 2025;13(12):573. doi: 10.3390/technologies13120573
 
-13. Ferreira C, Figueira G, Amorim P. Effective and interpretable dispatching rules for dynamic job shops via guided empirical learning. Omega. 2022;111:102643. doi:10.1016/j.omega.2022.102643.
+13. Ferreira C, Figueira G, Amorim P. Effective and interpretable dispatching rules for dynamic job shops via guided empirical learning. Omega. 2022;111:102643. doi: 10.1016/j.omega.2022.102643
 
-14. Huang Z, Mei Y, Zhang F, Zhang M. Toward evolving dispatching rules with flow control operations by grammar-guided linear genetic programming. IEEE Trans Evol Comput. 2025;29(1):217–231. doi:10.1109/TEVC.2024.3353207.
+14. Huang Z, Mei Y, Zhang F, et al. Toward evolving dispatching rules with flow control operations by grammar-guided linear genetic programming. IEEE Trans Evol Comput. 2025;29(1):217–231. doi: 10.1109/TEVC.2024.3353207
 
-15. Marques N, Figueira G, Guimarães L. Dynamic dispatching rule selection for the job shop scheduling problem. Comput Ind Eng. 2025;210:111471. doi:10.1016/j.cie.2025.111471.
+15. Marques N, Figueira G, Guimarães L. Dynamic dispatching rule selection for the job shop scheduling problem. Comput Ind Eng. 2025;210:111471. doi: 10.1016/j.cie.2025.111471
 
-16. Alrashdan KR. Routing under machine breakdowns: a benchmark of dispatching rules, bandits, and reinforcement learning for multi-server flow shops. J King Saud Univ Eng Sci. 2026;38(7):55. doi:10.1007/s44444-026-00128-9.
+16. [Author, anonymised for review]. Journal article introducing the two flow-shop instances and benchmarking dispatching rules, bandits and reinforcement learning under machine breakdowns; 2026. Details withheld for anonymous review.
 
-17. Rinciog A, Meyer A. Fabricatio-RL: a reinforcement learning simulation framework for production scheduling. In: Proceedings of the 2021 Winter Simulation Conference; 2021. p. 1–12. doi:10.1109/WSC52266.2021.9715366.
+17. Rinciog A, Meyer A. Fabricatio-RL: a reinforcement learning simulation framework for production scheduling. In: Proceedings of the 2021 Winter Simulation Conference; 2021. p. 1–12. doi: 10.1109/WSC52266.2021.9715366
 
 18. Altman E. Constrained Markov decision processes. Boca Raton (FL): Chapman & Hall/CRC; 1999.
 
-19. Achiam J, Held D, Tamar A, Abbeel P. Constrained policy optimization. In: Proceedings of the 34th International Conference on Machine Learning. PMLR 70; 2017. p. 22–31.
+19. Achiam J, Held D, Tamar A, et al. Constrained policy optimization. In: Proceedings of the 34th International Conference on Machine Learning. PMLR 70; 2017. p. 22–31.
 
 20. Tessler C, Mankowitz DJ, Mannor S. Reward constrained policy optimization. In: 7th International Conference on Learning Representations; 2019.
 
-21. Paternain S, Chamon LFO, Calvo-Fullana M, Ribeiro A. Constrained reinforcement learning has zero duality gap. In: Advances in Neural Information Processing Systems 32; 2019. p. 7553–7563.
+21. Paternain S, Chamon LFO, Calvo-Fullana M, et al. Constrained reinforcement learning has zero duality gap. In: Advances in Neural Information Processing Systems 32; 2019. p. 7553–7563.
 
 22. Stooke A, Achiam J, Abbeel P. Responsive safety in reinforcement learning by PID Lagrangian methods. In: Proceedings of the 37th International Conference on Machine Learning. PMLR 119; 2020. p. 9133–9143.
 
-23. Henderson P, Islam R, Bachman P, Pineau J, Precup D, Meger D. Deep reinforcement learning that matters. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence; 2018. p. 3207–3214. doi:10.1609/aaai.v32i1.11694.
+23. Henderson P, Islam R, Bachman P, et al. Deep reinforcement learning that matters. In: Proceedings of the Thirty-Second AAAI Conference on Artificial Intelligence; 2018. p. 3207–3214. doi: 10.1609/aaai.v32i1.11694
 
-24. Agarwal R, Schwarzer M, Castro PS, Courville A, Bellemare MG. Deep reinforcement learning at the edge of the statistical precipice. In: Advances in Neural Information Processing Systems 34; 2021. p. 29304–29320.
+24. Agarwal R, Schwarzer M, Castro PS, et al. Deep reinforcement learning at the edge of the statistical precipice. In: Advances in Neural Information Processing Systems 34; 2021. p. 29304–29320.
 
-25. Babor M. Small and medium-sized bakery production data for scheduling. Version 2 [dataset]. Mendeley Data; 2022. doi:10.17632/dhgbssb8ns.2.
+25. Babor M. Small and medium-sized bakery production data for scheduling. Version 2 [dataset]. 2022 [cited 2026 Sep 12]. In: Mendeley Data [Internet]. Available from: https://doi.org/10.17632/dhgbssb8ns.2
 
-26. Raffin A, Hill A, Gleave A, Kanervisto A, Ernestus M, Dormann N. Stable-Baselines3: reliable reinforcement learning implementations. J Mach Learn Res. 2021;22(268):1–8.
+26. Raffin A, Hill A, Gleave A, et al. Stable-Baselines3: reliable reinforcement learning implementations. J Mach Learn Res. 2021;22(268):1–8.
 
 ## Appendix A. Reproducibility
 
-**A.1 Software.** All experiments use the FlexFlowSim-CPPO simulator
+**A.1 Software.** All experiments use the study's discrete-event simulator
 [5]. The testbeds are defined in `configs/bakery_bk50.json` and
 `configs/electronics_3stage.json`. The original Lagrangian wrapper is
 `pilot_constrained_v4_auto.py`; the corrected wrapper, which also reproduces the
