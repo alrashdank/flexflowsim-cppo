@@ -31,7 +31,7 @@ lines total cost was nearly flat in routing while cost per unit fell with
 throughput.
 
 **Keywords:** discrete-event simulation, constrained reinforcement learning,
-flow-shop routing, dispatching rules, benchmarking, production control
+flow-shop routing, dispatching rules, production control
 
 ## 1. Introduction
 
